@@ -1,0 +1,11 @@
+{
+  "name": "digital-mart-assessment",
+  "version": "1.0.0",
+  "description": "Full-Stack Online Assessment Platform for Digital Mart Solutions",
+  "scripts": {
+    "start:backend": "node backend/server.js",
+    "seed": "node backend/database/seedQuestions.js",
+    "start:frontend": "npm --prefix frontend run dev"
+  },
+  "keywords": ["assessment", "digital-mart", "react", "node", "express", "sqlite"]
+}
