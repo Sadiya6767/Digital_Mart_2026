@@ -159,7 +159,7 @@ export default function RegistrationPage() {
         sessionStorage.setItem('dm_test_session', JSON.stringify(testRes.session));
         navigate('/test');
       } else {
-        setServerError(testRes.message || 'Assessment room is still busy. Please wait.');
+        setServerError(testRes.message || 'Unable to start assessment. Please try again.');
       }
     } catch (err) {
       setServerError('Network error. Please try again.');

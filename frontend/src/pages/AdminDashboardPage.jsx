@@ -319,11 +319,12 @@ export default function AdminDashboardPage() {
             {stats.inProgress > 0 && (
               <button
                 type="button"
-                className="btn btn-danger"
+                className="btn btn-secondary"
                 onClick={handleResetActiveSession}
-                style={{ fontSize: '0.85rem' }}
+                style={{ fontSize: '0.85rem', color: '#c2410c', borderColor: '#fed7aa', backgroundColor: '#fff7ed' }}
+                title="Force auto-submit active test sessions"
               >
-                Free Room ({stats.inProgress} active)
+                Reset In-Progress ({stats.inProgress})
               </button>
             )}
 

@@ -12,7 +12,10 @@ if (isPostgres) {
     connectionString: config.DATABASE_URL || process.env.DATABASE_URL,
     ssl: {
       rejectUnauthorized: false
-    }
+    },
+    max: 30, // Optimized for 100+ concurrent students
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000
   });
 
   function convertSql(sql) {
@@ -180,6 +183,12 @@ if (isPostgres) {
           key TEXT PRIMARY KEY,
           value TEXT NOT NULL
         );
+
+        CREATE INDEX IF NOT EXISTS idx_sessions_candidate ON test_sessions(candidateId);
+        CREATE INDEX IF NOT EXISTS idx_answers_candidate ON answers(candidateId);
+        CREATE INDEX IF NOT EXISTS idx_candidates_email ON candidates(email);
+        CREATE INDEX IF NOT EXISTS idx_sessions_status ON test_sessions(status);
+        CREATE INDEX IF NOT EXISTS idx_questions_active ON questions(isActive);
       `);
 
       // Ensure resumeData column exists if table existed previously
@@ -326,6 +335,12 @@ if (isPostgres) {
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
       );
+
+      CREATE INDEX IF NOT EXISTS idx_sessions_candidate ON test_sessions(candidateId);
+      CREATE INDEX IF NOT EXISTS idx_answers_candidate ON answers(candidateId);
+      CREATE INDEX IF NOT EXISTS idx_candidates_email ON candidates(email);
+      CREATE INDEX IF NOT EXISTS idx_sessions_status ON test_sessions(status);
+      CREATE INDEX IF NOT EXISTS idx_questions_active ON questions(isActive);
     `);
 
     // Ensure resumeData column exists if SQLite table was created prior
