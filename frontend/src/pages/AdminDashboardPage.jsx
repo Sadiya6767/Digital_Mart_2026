@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, CheckCircle2, Clock, AlertCircle, FileText, 
   ExternalLink, Search, Filter, RefreshCw, X, Eye, 
-  Award, Check, Settings, ToggleLeft, ToggleRight, Trash2, CheckSquare
+  Award, Check, Settings, ToggleLeft, ToggleRight, Trash2, CheckSquare, Download
 } from 'lucide-react';
 import Header from '../components/Header';
 import { api } from '../services/api';
@@ -202,6 +202,65 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (!candidates || candidates.length === 0) {
+      alert('No candidate records available to export.');
+      return;
+    }
+
+    const headers = [
+      'Candidate ID',
+      'Full Name',
+      'Email Address',
+      'Phone Number',
+      'College Name',
+      'Degree',
+      'Branch',
+      'Graduation Year',
+      'Test Status',
+      'Score (out of 50)',
+      'Total Questions',
+      'Percentage (%)',
+      'Registered Date',
+      'Test Started Date',
+      'Test Submitted Date'
+    ];
+
+    const rows = candidates.map(c => [
+      c.id,
+      `"${(c.fullName || '').replace(/"/g, '""')}"`,
+      `"${(c.email || '').replace(/"/g, '""')}"`,
+      `"${(c.phone || '').replace(/"/g, '""')}"`,
+      `"${(c.collegeName || '').replace(/"/g, '""')}"`,
+      `"${(c.degree || '').replace(/"/g, '""')}"`,
+      `"${(c.branch || '').replace(/"/g, '""')}"`,
+      c.graduationYear || '',
+      c.status || '',
+      c.score ?? 0,
+      c.totalQuestions || 50,
+      `"${c.percentage || 0}%"`,
+      `"${c.registeredAt ? new Date(c.registeredAt).toLocaleString('en-IN') : ''}"`,
+      `"${c.testStartedAt ? new Date(c.testStartedAt).toLocaleString('en-IN') : ''}"`,
+      `"${c.testSubmittedAt ? new Date(c.testSubmittedAt).toLocaleString('en-IN') : ''}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [
+      headers.join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.setAttribute('download', `Digital_Mart_Candidates_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const formatDate = (isoStr) => {
     if (!isoStr) return '-';
     try {
@@ -269,6 +328,17 @@ export default function AdminDashboardPage() {
             )}
 
             <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleExportCSV}
+              style={{ fontSize: '0.85rem', color: '#15803d', borderColor: '#86efac', backgroundColor: '#f0fdf4', fontWeight: '600' }}
+              title="Download all candidate records as an Excel CSV spreadsheet"
+            >
+              <Download size={16} />
+              <span>Export CSV (Excel)</span>
+            </button>
+
+            <button
               className="btn btn-secondary"
               onClick={() => setShowSettingsModal(true)}
               style={{ fontSize: '0.85rem' }}
@@ -317,7 +387,7 @@ export default function AdminDashboardPage() {
 
           <div className="stat-card">
             <span className="stat-label">Average Score</span>
-            <span className="stat-value" style={{ color: '#1d4ed8' }}>{stats.avgScore} <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#64748b' }}>/ 40</span></span>
+            <span className="stat-value" style={{ color: '#1d4ed8' }}>{stats.avgScore} <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#64748b' }}>/ 50</span></span>
           </div>
         </div>
 

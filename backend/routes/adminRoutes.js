@@ -21,6 +21,9 @@ router.get('/settings', authMiddleware, adminController.getSettings);
 // PUT /api/admin/settings
 router.put('/settings', authMiddleware, adminController.updateSettings);
 
+// GET /api/admin/export-csv
+router.get('/export-csv', authMiddleware, adminController.exportCandidatesCSV);
+
 // POST /api/admin/reset-active-session
 router.post('/reset-active-session', authMiddleware, adminController.resetActiveSession);
 

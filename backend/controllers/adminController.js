@@ -417,3 +417,58 @@ exports.deleteAllCandidates = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Failed to clear all candidate records.' });
   }
 };
+
+// Export candidates to CSV for Excel
+exports.exportCandidatesCSV = async (req, res) => {
+  try {
+    const candidates = await db.all('SELECT * FROM candidates ORDER BY id ASC');
+    const headers = [
+      'Candidate ID',
+      'Full Name',
+      'Email',
+      'Phone',
+      'College Name',
+      'Degree',
+      'Branch',
+      'Graduation Year',
+      'Status',
+      'Score',
+      'Total Questions',
+      'Percentage (%)',
+      'Registered Date',
+      'Test Started Date',
+      'Test Submitted Date'
+    ];
+
+    const rows = candidates.map(c => [
+      c.id,
+      `"${(c.fullName || c.fullname || '').replace(/"/g, '""')}"`,
+      `"${(c.email || '').replace(/"/g, '""')}"`,
+      `"${(c.phone || '').replace(/"/g, '""')}"`,
+      `"${(c.collegeName || c.collegename || '').replace(/"/g, '""')}"`,
+      `"${(c.degree || '').replace(/"/g, '""')}"`,
+      `"${(c.branch || '').replace(/"/g, '""')}"`,
+      c.graduationYear || c.graduationyear || '',
+      c.status || '',
+      c.score ?? 0,
+      c.totalQuestions || c.totalquestions || 50,
+      `"${c.percentage || 0}%"`,
+      `"${c.registeredAt || c.registeredat || ''}"`,
+      `"${c.testStartedAt || c.teststartedat || ''}"`,
+      `"${c.testSubmittedAt || c.testsubmittedat || ''}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [
+      headers.join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\r\n');
+
+    const filename = `Digital_Mart_Candidates_${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.status(200).send(csvContent);
+  } catch (err) {
+    console.error('Export CSV error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to export CSV.' });
+  }
+};
