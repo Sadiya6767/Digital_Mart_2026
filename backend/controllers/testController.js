@@ -61,14 +61,16 @@ exports.startTest = async (req, res) => {
     // 1-Person-At-A-Time Lock: Check if another candidate is currently taking the test
     const activeSessions = await db.all("SELECT * FROM test_sessions WHERE status = 'IN_PROGRESS'");
     for (const session of activeSessions) {
-      if (Number(session.candidateId) !== Number(candidateId)) {
+      const sessCandId = session.candidateId || session.candidateid;
+      if (Number(sessCandId) !== Number(candidateId)) {
         const now = new Date();
-        const endTime = new Date(session.endTime);
+        const sessionEndTime = session.endTime || session.endtime;
+        const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date();
         const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
 
         if (remainingSeconds > 0) {
-          const activeCand = await db.get('SELECT fullName FROM candidates WHERE id = ?', [session.candidateId]);
-          const activeName = activeCand ? activeCand.fullName : 'Another candidate';
+          const activeCand = await db.get('SELECT fullName FROM candidates WHERE id = ?', [sessCandId]);
+          const activeName = activeCand ? (activeCand.fullName || activeCand.fullname) : 'Another candidate';
           return res.status(403).json({
             success: false,
             code: 'ASSESSMENT_BUSY',
@@ -76,7 +78,7 @@ exports.startTest = async (req, res) => {
           });
         } else {
           // Session expired: release lock by auto-submitting
-          await autoSubmitTest(session.candidateId);
+          await autoSubmitTest(sessCandId);
         }
       }
     }
@@ -85,8 +87,11 @@ exports.startTest = async (req, res) => {
     const existingSession = await db.get('SELECT * FROM test_sessions WHERE candidateId = ?', [candidateId]);
 
     if (existingSession) {
+      const sessionEndTime = existingSession.endTime || existingSession.endtime;
+      const sessionCurrQ = existingSession.currentQuestion || existingSession.currentquestion || 1;
+      const candName = candidate.fullName || candidate.fullname || 'Candidate';
       const now = new Date();
-      const endTime = new Date(existingSession.endTime);
+      const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date();
       const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
 
       if (remainingSeconds <= 0 && existingSession.status === 'IN_PROGRESS') {
@@ -104,12 +109,12 @@ exports.startTest = async (req, res) => {
         message: 'Resuming existing test session.',
         session: {
           candidateId: candidate.id,
-          candidateName: candidate.fullName,
-          currentQuestion: existingSession.currentQuestion,
+          candidateName: candName,
+          currentQuestion: sessionCurrQ,
           totalQuestions: 50,
           remainingSeconds,
           status: existingSession.status,
-          endTime: existingSession.endTime
+          endTime: sessionEndTime
         }
       });
     }
@@ -137,10 +142,10 @@ exports.startTest = async (req, res) => {
     const optionOrders = {};
     for (const q of candidateQuestions) {
       const origOptions = [
-        { key: 'A', text: q.optionA },
-        { key: 'B', text: q.optionB },
-        { key: 'C', text: q.optionC },
-        { key: 'D', text: q.optionD }
+        { key: 'A', text: q.optionA ?? q.optiona },
+        { key: 'B', text: q.optionB ?? q.optionb },
+        { key: 'C', text: q.optionC ?? q.optionc },
+        { key: 'D', text: q.optionD ?? q.optiond }
       ];
       // Cryptographically shuffle the 4 options
       const shuffledOptions = shuffleArray(origOptions);
@@ -211,18 +216,23 @@ exports.getSession = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No active assessment session found.' });
     }
 
+    const sessionEndTime = session.endTime || session.endtime;
+    const sessionCurrQ = session.currentQuestion || session.currentquestion || 1;
+    const sessionStatus = session.status || 'IN_PROGRESS';
+    const candName = candidate.fullName || candidate.fullname || 'Candidate';
+
     const now = new Date();
-    const endTime = new Date(session.endTime);
+    const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 15 * 60 * 1000);
     const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
 
-    if (remainingSeconds <= 0 && session.status === 'IN_PROGRESS') {
+    if (remainingSeconds <= 0 && sessionStatus === 'IN_PROGRESS') {
       await autoSubmitTest(candidateId);
       return res.status(200).json({
         success: true,
         status: 'AUTO_SUBMITTED',
         remainingSeconds: 0,
-        candidateName: candidate.fullName,
-        currentQuestion: session.currentQuestion,
+        candidateName: candName,
+        currentQuestion: sessionCurrQ,
         totalQuestions: 50
       });
     }
@@ -230,12 +240,12 @@ exports.getSession = async (req, res) => {
     return res.status(200).json({
       success: true,
       candidateId: candidate.id,
-      candidateName: candidate.fullName,
-      currentQuestion: session.currentQuestion,
+      candidateName: candName,
+      currentQuestion: sessionCurrQ,
       totalQuestions: 50,
       remainingSeconds,
-      status: session.status,
-      endTime: session.endTime
+      status: sessionStatus,
+      endTime: sessionEndTime
     });
 
   } catch (err) {
@@ -254,9 +264,13 @@ exports.getQuestion = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Assessment session not found.' });
     }
 
+    const sessionEndTime = session.endTime || session.endtime;
+    const qOrderRaw = session.questionOrder || session.questionorder;
+    const optOrdersRaw = session.optionOrders || session.optionorders;
+
     // Check timer
     const now = new Date();
-    const endTime = new Date(session.endTime);
+    const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 15 * 60 * 1000);
     const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
 
     if (remainingSeconds <= 0) {
@@ -268,8 +282,15 @@ exports.getQuestion = async (req, res) => {
       });
     }
 
-    const questionOrder = JSON.parse(session.questionOrder);
-    const optionOrders = JSON.parse(session.optionOrders);
+    let questionOrder = [];
+    let optionOrders = {};
+    try {
+      questionOrder = typeof qOrderRaw === 'string' ? JSON.parse(qOrderRaw) : (qOrderRaw || []);
+      optionOrders = typeof optOrdersRaw === 'string' ? JSON.parse(optOrdersRaw) : (optOrdersRaw || {});
+    } catch (parseErr) {
+      console.error('Session JSON parse error:', parseErr);
+      return res.status(500).json({ success: false, message: 'Invalid session question data.' });
+    }
 
     if (questionNumber < 1 || questionNumber > questionOrder.length) {
       return res.status(400).json({ success: false, message: 'Invalid question number.' });
@@ -288,28 +309,34 @@ exports.getQuestion = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Question not found.' });
     }
 
+    const optA = rawQuestion.optionA ?? rawQuestion.optiona ?? '';
+    const optB = rawQuestion.optionB ?? rawQuestion.optionb ?? '';
+    const optC = rawQuestion.optionC ?? rawQuestion.optionc ?? '';
+    const optD = rawQuestion.optionD ?? rawQuestion.optiond ?? '';
+
     // Reconstruct shuffled options for this candidate
-    const mapping = optionOrders[questionId];
+    const mapping = optionOrders[questionId] || optionOrders[String(questionId)] || { 'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D' };
     const origOptions = {
-      'A': rawQuestion.optionA,
-      'B': rawQuestion.optionB,
-      'C': rawQuestion.optionC,
-      'D': rawQuestion.optionD
+      'A': optA,
+      'B': optB,
+      'C': optC,
+      'D': optD
     };
 
     const displayOptions = {
-      'A': origOptions[mapping['A']],
-      'B': origOptions[mapping['B']],
-      'C': origOptions[mapping['C']],
-      'D': origOptions[mapping['D']]
+      'A': origOptions[mapping['A']] || optA,
+      'B': origOptions[mapping['B']] || optB,
+      'C': origOptions[mapping['C']] || optC,
+      'D': origOptions[mapping['D']] || optD
     };
 
     // Check if previously answered
     const savedAnswer = await db.get('SELECT selectedAnswer FROM answers WHERE candidateId = ? AND questionId = ?', [candidateId, questionId]);
     let selectedOptionForStudent = null;
-    if (savedAnswer) {
+    const savedSelected = savedAnswer?.selectedAnswer ?? savedAnswer?.selectedanswer;
+    if (savedSelected) {
       for (const [key, origKey] of Object.entries(mapping)) {
-        if (origKey === savedAnswer.selectedAnswer) {
+        if (origKey === savedSelected) {
           selectedOptionForStudent = key;
           break;
         }
@@ -350,9 +377,14 @@ exports.submitAnswer = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Session not found.' });
     }
 
+    const sessionEndTime = session.endTime || session.endtime;
+    const qOrderRaw = session.questionOrder || session.questionorder;
+    const optOrdersRaw = session.optionOrders || session.optionorders;
+    const sessionCurrQ = session.currentQuestion || session.currentquestion || 1;
+
     // Check timer
     const now = new Date();
-    const endTime = new Date(session.endTime);
+    const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 15 * 60 * 1000);
     const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
 
     if (remainingSeconds <= 0) {
@@ -364,8 +396,15 @@ exports.submitAnswer = async (req, res) => {
       });
     }
 
-    const questionOrder = JSON.parse(session.questionOrder);
-    const optionOrders = JSON.parse(session.optionOrders);
+    let questionOrder = [];
+    let optionOrders = {};
+    try {
+      questionOrder = typeof qOrderRaw === 'string' ? JSON.parse(qOrderRaw) : (qOrderRaw || []);
+      optionOrders = typeof optOrdersRaw === 'string' ? JSON.parse(optOrdersRaw) : (optOrdersRaw || {});
+    } catch (parseErr) {
+      console.error('Session JSON parse error:', parseErr);
+      return res.status(500).json({ success: false, message: 'Invalid session data.' });
+    }
 
     const questionId = questionOrder[questionNumber - 1];
     if (!questionId) {
@@ -374,7 +413,7 @@ exports.submitAnswer = async (req, res) => {
 
     // If candidate skipped or selected nothing
     if (!selectedOption) {
-      const nextQuestion = Math.min(50, Math.max(session.currentQuestion, questionNumber + 1));
+      const nextQuestion = Math.min(50, Math.max(sessionCurrQ, questionNumber + 1));
       await db.run('UPDATE test_sessions SET currentQuestion = ? WHERE candidateId = ?', [nextQuestion, candidateId]);
 
       return res.status(200).json({
@@ -386,7 +425,7 @@ exports.submitAnswer = async (req, res) => {
     }
 
     // Look up original key
-    const mapping = optionOrders[questionId];
+    const mapping = optionOrders[questionId] || optionOrders[String(questionId)] || { 'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D' };
     const originalAnswerKey = mapping ? mapping[selectedOption] : null;
 
     if (!originalAnswerKey) {
@@ -395,7 +434,8 @@ exports.submitAnswer = async (req, res) => {
 
     // Check correctness
     const question = await db.get('SELECT correctAnswer FROM questions WHERE id = ?', [questionId]);
-    const isCorrect = (question && question.correctAnswer === originalAnswerKey) ? 1 : 0;
+    const correctAns = question?.correctAnswer || question?.correctanswer;
+    const isCorrect = (correctAns === originalAnswerKey) ? 1 : 0;
 
     // Save answer (works identically in SQLite and PostgreSQL with ON CONFLICT)
     await db.run(`
@@ -414,7 +454,7 @@ exports.submitAnswer = async (req, res) => {
     ]);
 
     // Update current question in session
-    const nextQuestion = Math.min(50, Math.max(session.currentQuestion, questionNumber + 1));
+    const nextQuestion = Math.min(50, Math.max(sessionCurrQ, questionNumber + 1));
     await db.run('UPDATE test_sessions SET currentQuestion = ? WHERE candidateId = ?', [nextQuestion, candidateId]);
 
     return res.status(200).json({
@@ -442,13 +482,17 @@ exports.submitTest = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Candidate not found.' });
     }
 
-    if (candidate.status === 'COMPLETED' || candidate.status === 'AUTO_SUBMITTED') {
+    const candName = candidate.fullName || candidate.fullname || 'Candidate';
+    const candStatus = candidate.status;
+    const candSubmittedAt = candidate.testSubmittedAt || candidate.testsubmittedat;
+
+    if (candStatus === 'COMPLETED' || candStatus === 'AUTO_SUBMITTED') {
       return res.status(200).json({
         success: true,
         message: 'Assessment already submitted.',
-        status: candidate.status,
-        submittedAt: candidate.testSubmittedAt,
-        candidateName: candidate.fullName
+        status: candStatus,
+        submittedAt: candSubmittedAt,
+        candidateName: candName
       });
     }
 
@@ -478,7 +522,7 @@ exports.submitTest = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Assessment submitted successfully.',
-      candidateName: candidate.fullName,
+      candidateName: candName,
       status: finalStatus,
       submittedAt: now,
       score: showScore ? score : undefined,

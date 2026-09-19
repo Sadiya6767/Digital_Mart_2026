@@ -21,18 +21,71 @@ if (isPostgres) {
     return converted;
   }
 
+  const camelMap = {
+    questionorder: 'questionOrder',
+    optionorders: 'optionOrders',
+    currentquestion: 'currentQuestion',
+    starttime: 'startTime',
+    endtime: 'endTime',
+    candidateid: 'candidateId',
+    questionid: 'questionId',
+    selectedanswer: 'selectedAnswer',
+    iscorrect: 'isCorrect',
+    answeredat: 'answeredAt',
+    fullname: 'fullName',
+    collegename: 'collegeName',
+    graduationyear: 'graduationYear',
+    resumepath: 'resumePath',
+    resumedata: 'resumeData',
+    registeredat: 'registeredAt',
+    teststartedat: 'testStartedAt',
+    testsubmittedat: 'testSubmittedAt',
+    totalquestions: 'totalQuestions',
+    optiona: 'optionA',
+    optionb: 'optionB',
+    optionc: 'optionC',
+    optiond: 'optionD',
+    correctanswer: 'correctAnswer',
+    isactive: 'isActive',
+    passwordhash: 'passwordHash',
+    createdat: 'createdAt'
+  };
+
+  function normalizeRow(row) {
+    if (!row || typeof row !== 'object') return row;
+    const copy = { ...row };
+    for (const [key, val] of Object.entries(row)) {
+      const camel = camelMap[key.toLowerCase()];
+      if (camel && copy[camel] === undefined) {
+        copy[camel] = val;
+      }
+    }
+    return new Proxy(copy, {
+      get(target, prop) {
+        if (typeof prop === 'string') {
+          if (prop in target) return target[prop];
+          const lower = prop.toLowerCase();
+          if (lower in target) return target[lower];
+          const camel = camelMap[lower];
+          if (camel && camel in target) return target[camel];
+        }
+        return target[prop];
+      }
+    });
+  }
+
   dbWrapper = {
     isPostgres: true,
     pool,
     async get(sql, params = []) {
       const converted = convertSql(sql);
       const res = await pool.query(converted, params);
-      return res.rows[0];
+      return normalizeRow(res.rows[0]);
     },
     async all(sql, params = []) {
       const converted = convertSql(sql);
       const res = await pool.query(converted, params);
-      return res.rows;
+      return (res.rows || []).map(normalizeRow);
     },
     async run(sql, params = []) {
       let converted = convertSql(sql);
@@ -162,10 +215,12 @@ if (isPostgres) {
         console.log(`[Neon Postgres] Default admin created: ${config.ADMIN_USERNAME}`);
       }
 
-      // Check if questions need auto-seeding
+      // Check if questions need auto-seeding (ensure full 50 questions)
       const qCountRes = await pool.query('SELECT COUNT(*) as count FROM questions');
-      if (parseInt(qCountRes.rows[0].count, 10) === 0) {
-        console.log('[Neon Postgres] Questions table empty. Auto-seeding 40 questions...');
+      const currentCount = parseInt(qCountRes.rows[0].count, 10);
+      if (currentCount < 50) {
+        console.log(`[Neon Postgres] Questions table has ${currentCount} questions. Seeding full 50 questions...`);
+        await pool.query('DELETE FROM questions');
         const { questions } = require('../database/seedQuestions');
         for (const q of questions) {
           await pool.query(`
@@ -173,7 +228,7 @@ if (isPostgres) {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 1)
           `, [q.category, q.question, q.optionA, q.optionB, q.optionC, q.optionD, q.correctAnswer, q.difficulty]);
         }
-        console.log(`[Neon Postgres] Successfully seeded ${questions.length} questions.`);
+        console.log(`[Neon Postgres] Successfully seeded all ${questions.length} questions.`);
       }
 
       console.log('[Neon Postgres] Connected and verified successfully.');
