@@ -244,15 +244,12 @@ exports.getCandidateDetails = async (req, res) => {
 exports.getResume = async (req, res) => {
   try {
     const candidateId = parseInt(req.params.id, 10);
-    const candidate = await db.get('SELECT resumePath, fullName FROM candidates WHERE id = ?', [candidateId]);
+    const candidate = await db.get('SELECT resumePath, resumeData, fullName FROM candidates WHERE id = ?', [candidateId]);
     const resumePath = candidate?.resumePath || candidate?.resumepath;
-    if (!candidate || !resumePath) {
-      return res.status(404).json({ success: false, message: 'Resume not found for this candidate.' });
-    }
+    const resumeData = candidate?.resumeData || candidate?.resumedata;
 
-    const filePath = path.join(config.UPLOAD_DIR, resumePath);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ success: false, message: 'Resume file missing from storage.' });
+    if (!candidate || (!resumePath && !resumeData)) {
+      return res.status(404).json({ success: false, message: 'Resume not found for this candidate.' });
     }
 
     const safeName = (candidate.fullName || candidate.fullname || 'Candidate').replace(/[^a-zA-Z0-9]/g, '_');
@@ -260,8 +257,23 @@ exports.getResume = async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
 
-    const stream = fs.createReadStream(filePath);
-    stream.pipe(res);
+    // 1. Check if file is available on local disk
+    if (resumePath) {
+      const filePath = path.join(config.UPLOAD_DIR, resumePath);
+      if (fs.existsSync(filePath)) {
+        const stream = fs.createReadStream(filePath);
+        return stream.pipe(res);
+      }
+    }
+
+    // 2. Fallback to permanently saved base64 database blob
+    if (resumeData) {
+      const fileBuffer = Buffer.from(resumeData, 'base64');
+      res.setHeader('Content-Length', fileBuffer.length);
+      return res.end(fileBuffer);
+    }
+
+    return res.status(404).json({ success: false, message: 'Resume file missing from storage.' });
 
   } catch (err) {
     console.error('Download resume error:', err);

@@ -85,11 +85,12 @@ if (isPostgres) {
           branch TEXT NOT NULL,
           graduationYear INTEGER NOT NULL,
           resumePath TEXT NOT NULL,
+          resumeData TEXT,
           registeredAt TEXT NOT NULL,
           testStartedAt TEXT,
           testSubmittedAt TEXT,
           score INTEGER DEFAULT 0,
-          totalQuestions INTEGER DEFAULT 40,
+          totalQuestions INTEGER DEFAULT 50,
           percentage REAL DEFAULT 0.0,
           status TEXT DEFAULT 'REGISTERED'
         );
@@ -127,6 +128,13 @@ if (isPostgres) {
           value TEXT NOT NULL
         );
       `);
+
+      // Ensure resumeData column exists if table existed previously
+      try {
+        await pool.query('ALTER TABLE candidates ADD COLUMN IF NOT EXISTS resumeData TEXT;');
+      } catch (e) {
+        // Ignored
+      }
 
       // Default settings
       await pool.query(`
@@ -218,6 +226,7 @@ if (isPostgres) {
         branch TEXT NOT NULL,
         graduationYear INTEGER NOT NULL,
         resumePath TEXT NOT NULL,
+        resumeData TEXT,
         registeredAt TEXT NOT NULL,
         testStartedAt TEXT,
         testSubmittedAt TEXT,
@@ -263,6 +272,13 @@ if (isPostgres) {
         value TEXT NOT NULL
       );
     `);
+
+    // Ensure resumeData column exists if SQLite table was created prior
+    try {
+      sqliteDb.exec('ALTER TABLE candidates ADD COLUMN resumeData TEXT;');
+    } catch (e) {
+      // Ignored if already exists
+    }
 
     const insertSetting = sqliteDb.prepare('INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)');
     insertSetting.run('SHOW_STUDENT_SCORE', config.SHOW_STUDENT_SCORE ? 'true' : 'false');

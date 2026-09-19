@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const path = require('path');
+const fs = require('fs');
 
 // Validate email format
 function isValidEmail(email) {
@@ -62,6 +63,15 @@ exports.registerCandidate = async (req, res) => {
     }
 
     const resumePath = req.file.filename;
+    let resumeData = null;
+    if (req.file.path) {
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        resumeData = fileBuffer.toString('base64');
+      } catch (readErr) {
+        console.warn('Could not read resume file to base64:', readErr.message);
+      }
+    }
 
     // 6. Check existing candidate
     const existing = await db.get('SELECT * FROM candidates WHERE email = ?', [trimmedEmail]);
@@ -92,8 +102,8 @@ exports.registerCandidate = async (req, res) => {
     const result = await db.run(`
       INSERT INTO candidates (
         fullName, email, phone, collegeName, degree, branch, graduationYear,
-        resumePath, registeredAt, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'REGISTERED')
+        resumePath, resumeData, registeredAt, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REGISTERED')
     `, [
       fullName.trim(),
       trimmedEmail,
@@ -103,6 +113,7 @@ exports.registerCandidate = async (req, res) => {
       branch.trim(),
       gradYearNum,
       resumePath,
+      resumeData,
       new Date().toISOString()
     ]);
 
