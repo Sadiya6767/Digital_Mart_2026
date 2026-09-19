@@ -360,20 +360,106 @@ body {
   100% { opacity: 1; transform: scale(1.02); }
 }
 
-/* Progress bar */
+/* Progress bar (Overall test progress) */
 .progress-track {
   width: 100%;
-  height: 8px;
+  height: 6px;
   background-color: #e2e8f0;
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #2563eb, #1d4ed8);
   transition: width 0.3s ease;
+}
+
+/* 15-Second Running Question Timer Line */
+.question-timer-wrapper {
+  margin-bottom: 24px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.question-timer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.question-timer-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.question-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-family: monospace, sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.timer-green-badge {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.timer-orange-badge {
+  background-color: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.timer-red-badge {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  animation: pulse 1s infinite alternate;
+}
+
+.question-timer-track {
+  width: 100%;
+  height: 10px;
+  background-color: #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.question-timer-line {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.1s linear, background-color 0.3s ease;
+}
+
+.timer-green-line {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.timer-orange-line {
+  background: linear-gradient(90deg, #fb923c, #ea580c);
+  box-shadow: 0 0 8px rgba(234, 88, 12, 0.4);
+}
+
+.timer-red-line {
+  background: linear-gradient(90deg, #f87171, #dc2626);
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.6);
 }
 
 /* Question Area */

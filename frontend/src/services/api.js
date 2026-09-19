@@ -1,4 +1,8 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+let rawUrl = (import.meta.env.VITE_API_BASE_URL || '/api').trim().replace(/\/+$/, '');
+if (rawUrl.startsWith('http') && !rawUrl.endsWith('/api')) {
+  rawUrl += '/api';
+}
+const BASE_URL = rawUrl;
 
 export const api = {
   // Candidate Registration

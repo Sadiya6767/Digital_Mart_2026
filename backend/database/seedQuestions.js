@@ -225,8 +225,118 @@ const questions = [
     difficulty: 'BASIC'
   },
 
-  // ==================== BUSINESS DEVELOPMENT / SALES (20 EASY QUESTIONS) ====================
   // 21
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'Which HTML5 input attribute ensures that a user cannot submit a form without filling in the field?',
+    optionA: 'validate',
+    optionB: 'required',
+    optionC: 'mandatory',
+    optionD: 'needed',
+    correctAnswer: 'B',
+    difficulty: 'BASIC'
+  },
+  // 22
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'Which CSS rule is used to apply styles conditionally based on the screen width for responsive web design?',
+    optionA: '@media',
+    optionB: '@screen',
+    optionC: '@responsive',
+    optionD: '@viewport',
+    correctAnswer: 'A',
+    difficulty: 'BASIC'
+  },
+  // 23
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'Which CSS display value enables a two-dimensional layout system with rows and columns?',
+    optionA: 'display: block;',
+    optionB: 'display: grid;',
+    optionC: 'display: flex;',
+    optionD: 'display: inline;',
+    correctAnswer: 'B',
+    difficulty: 'BASIC'
+  },
+  // 24
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'Which JavaScript array method creates a new array populated with the results of calling a provided function on every element?',
+    optionA: 'filter()',
+    optionB: 'map()',
+    optionC: 'forEach()',
+    optionD: 'reduce()',
+    correctAnswer: 'B',
+    difficulty: 'INTERMEDIATE'
+  },
+  // 25
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'In modern JavaScript, what does the "async/await" syntax primarily simplify?',
+    optionA: 'Working with asynchronous code and Promises',
+    optionB: 'Drawing 3D graphics on the canvas',
+    optionC: 'Compiling JavaScript to machine code',
+    optionD: 'Managing CSS keyframe animations',
+    correctAnswer: 'A',
+    difficulty: 'INTERMEDIATE'
+  },
+  // 26
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'In React, what does passing an empty dependency array `[]` to `useEffect` mean?',
+    optionA: 'The effect executes on every single render',
+    optionB: 'The effect runs only once after the initial render (component mount)',
+    optionC: 'The effect is permanently disabled',
+    optionD: 'The component will never re-render',
+    correctAnswer: 'B',
+    difficulty: 'INTERMEDIATE'
+  },
+  // 27
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'Which HTTP status code indicates that a new resource has been successfully created on the server?',
+    optionA: '200 OK',
+    optionB: '201 Created',
+    optionC: '204 No Content',
+    optionD: '304 Not Modified',
+    correctAnswer: 'B',
+    difficulty: 'INTERMEDIATE'
+  },
+  // 28
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'Which client-side web storage mechanism allows data to persist even after the browser window or tab is closed?',
+    optionA: 'sessionStorage',
+    optionB: 'localStorage',
+    optionC: 'Memory Cache',
+    optionD: 'Page State',
+    correctAnswer: 'B',
+    difficulty: 'BASIC'
+  },
+  // 29
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'Which Git command creates and immediately switches to a new branch named "feature-login"?',
+    optionA: 'git branch -n feature-login',
+    optionB: 'git checkout -b feature-login',
+    optionC: 'git branch --switch feature-login',
+    optionD: 'git merge feature-login',
+    correctAnswer: 'B',
+    difficulty: 'BASIC'
+  },
+  // 30
+  {
+    category: 'WEB_DEVELOPMENT',
+    question: 'Which SQL keyword is used to sort the query result set in ascending or descending order?',
+    optionA: 'SORT BY',
+    optionB: 'ARRANGE BY',
+    optionC: 'ORDER BY',
+    optionD: 'GROUP BY',
+    correctAnswer: 'C',
+    difficulty: 'BASIC'
+  },
+
+  // ==================== BUSINESS DEVELOPMENT / SALES (20 QUESTIONS) ====================
   {
     category: 'BUSINESS_DEVELOPMENT',
     question: 'What is the primary role of a Business Development Executive (BDE)?',
@@ -449,20 +559,21 @@ const questions = [
 ];
 
 async function seed() {
-  console.log('--- Starting Database Seeding (40 Questions) ---');
+  console.log('--- Starting Database Seeding (50 Questions: 30 Web Dev + 20 Biz Dev) ---');
 
-  // Seed Admin user
+  // Seed or update Admin user
   const adminCheck = await db.get('SELECT id FROM admin_users WHERE username = ?', [config.ADMIN_USERNAME]);
+  const salt = bcrypt.genSaltSync(10);
+  const passwordHash = bcrypt.hashSync(config.ADMIN_PASSWORD, salt);
   if (!adminCheck) {
-    const salt = bcrypt.genSaltSync(10);
-    const passwordHash = bcrypt.hashSync(config.ADMIN_PASSWORD, salt);
     await db.run(`
       INSERT INTO admin_users (username, passwordHash, createdAt)
       VALUES (?, ?, ?)
     `, [config.ADMIN_USERNAME, passwordHash, new Date().toISOString()]);
     console.log(`Default admin user seeded: ${config.ADMIN_USERNAME}`);
   } else {
-    console.log('Admin user verified.');
+    await db.run('UPDATE admin_users SET passwordHash = ? WHERE username = ?', [passwordHash, config.ADMIN_USERNAME]);
+    console.log(`Admin user verified and password updated: ${config.ADMIN_USERNAME}`);
   }
 
   // Clear existing records to re-seed cleanly
@@ -488,7 +599,7 @@ async function seed() {
     ]);
     inserted++;
   }
-  console.log(`Successfully seeded ${inserted} questions (20 Web Dev + 20 Biz Dev)!`);
+  console.log(`Successfully seeded ${inserted} questions (30 Web Dev + 20 Biz Dev)!`);
   console.log('--- Seeding Completed Successfully ---');
 }
 

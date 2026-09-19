@@ -7,6 +7,7 @@ import TabWarningModal from '../components/TabWarningModal';
 import { api } from '../services/api';
 
 const SECONDS_PER_QUESTION = 15;
+const TOTAL_QUESTION_TIME_MS = 15000;
 
 export default function TestPage() {
   const navigate = useNavigate();
@@ -16,14 +17,14 @@ export default function TestPage() {
 
   const [loading, setLoading] = useState(true);
   const [currentNumber, setCurrentNumber] = useState(1);
-  const [totalQuestions, setTotalQuestions] = useState(40);
+  const [totalQuestions, setTotalQuestions] = useState(50);
   const [questionData, setQuestionData] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // 15-second silent per-question timer (runs in background)
-  const [questionSeconds, setQuestionSeconds] = useState(SECONDS_PER_QUESTION);
+  // 15-second running line timer
+  const [timeLeftMs, setTimeLeftMs] = useState(TOTAL_QUESTION_TIME_MS);
   const questionTimerRef = useRef(null);
 
   // Modals & Anti-cheat
@@ -37,7 +38,7 @@ export default function TestPage() {
   const currentNumberRef = useRef(1);
   currentNumberRef.current = currentNumber;
 
-  const totalQuestionsRef = useRef(40);
+  const totalQuestionsRef = useRef(50);
   totalQuestionsRef.current = totalQuestions;
 
   // Redirect if not registered
@@ -87,7 +88,7 @@ export default function TestPage() {
 
       const qNum = res.currentQuestion || 1;
       setCurrentNumber(qNum);
-      setTotalQuestions(res.totalQuestions || 40);
+      setTotalQuestions(res.totalQuestions || 50);
 
       await loadQuestion(qNum);
 
@@ -99,22 +100,23 @@ export default function TestPage() {
     }
   };
 
-  // Start 5-second per-question countdown
+  // Start 15-second per-question line timer with 100ms resolution
   const startQuestionTimer = () => {
     if (questionTimerRef.current) clearInterval(questionTimerRef.current);
-    setQuestionSeconds(SECONDS_PER_QUESTION);
+    setTimeLeftMs(TOTAL_QUESTION_TIME_MS);
 
+    const startTime = Date.now();
     questionTimerRef.current = setInterval(() => {
-      setQuestionSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(questionTimerRef.current);
-          // Time up for this question: auto advance!
-          autoAdvanceQuestion();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, TOTAL_QUESTION_TIME_MS - elapsed);
+      setTimeLeftMs(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(questionTimerRef.current);
+        // Time up for this question: auto advance!
+        autoAdvanceQuestion();
+      }
+    }, 100);
   };
 
   const autoAdvanceQuestion = async () => {
@@ -169,15 +171,41 @@ export default function TestPage() {
     }
   };
 
-  // Select Option
+  // Select Option & Auto-Advance to Next Question ("click karte hi next par khud chala jaye")
   const handleSelectOption = async (optionKey) => {
+    if (submitting) return; // Prevent duplicate clicks
     setSelectedOption(optionKey);
+    selectedOptionRef.current = optionKey;
     setErrorMsg('');
 
+    // Stop 15-second line timer
+    if (questionTimerRef.current) clearInterval(questionTimerRef.current);
+
     try {
+      setSubmitting(true);
       await api.saveAnswer(candidateId, currentNumber, optionKey);
+
+      // Brief 200ms visual confirmation before automatically loading the next question
+      setTimeout(async () => {
+        const curr = currentNumberRef.current;
+        const total = totalQuestionsRef.current;
+
+        if (curr < total) {
+          const nextNum = curr + 1;
+          setCurrentNumber(nextNum);
+          setSelectedOption(null);
+          await loadQuestion(nextNum);
+          setSubmitting(false);
+        } else {
+          // Last question: open confirmation modal to finalize submission
+          setSubmitting(false);
+          setShowSubmitModal(true);
+        }
+      }, 200);
+
     } catch (err) {
-      console.warn('Silent save answer error:', err);
+      console.warn('Error saving answer on auto-advance:', err);
+      setSubmitting(false);
     }
   };
 
@@ -258,6 +286,18 @@ export default function TestPage() {
     );
   }
 
+  const remainingSec = Math.ceil(timeLeftMs / 1000);
+  let timerLineClass = 'timer-green-line';
+  let timerBadgeClass = 'timer-green-badge';
+  if (remainingSec <= 4) {
+    timerLineClass = 'timer-red-line';
+    timerBadgeClass = 'timer-red-badge';
+  } else if (remainingSec <= 8) {
+    timerLineClass = 'timer-orange-line';
+    timerBadgeClass = 'timer-orange-badge';
+  }
+  const linePercent = Math.max(0, Math.min(100, (timeLeftMs / TOTAL_QUESTION_TIME_MS) * 100));
+
   return (
     <>
       <Header />
@@ -276,12 +316,31 @@ export default function TestPage() {
             </div>
           </div>
 
-          {/* Visual Progress Bar */}
+          {/* Visual Progress Bar (Overall) */}
           <div className="progress-track">
             <div 
               className="progress-fill" 
               style={{ width: `${(currentNumber / totalQuestions) * 100}%` }}
             />
+          </div>
+
+          {/* 15-Second Running Question Timer Line */}
+          <div className="question-timer-wrapper">
+            <div className="question-timer-top">
+              <div className="question-timer-label">
+                <Clock size={15} />
+                <span>Time Remaining</span>
+              </div>
+              <div className={`question-timer-badge ${timerBadgeClass}`}>
+                {remainingSec}s
+              </div>
+            </div>
+            <div className="question-timer-track">
+              <div 
+                className={`question-timer-line ${timerLineClass}`}
+                style={{ width: `${linePercent}%` }}
+              />
+            </div>
           </div>
 
           {errorMsg && (
@@ -291,15 +350,9 @@ export default function TestPage() {
             </div>
           )}
 
-          {/* Question Details */}
+          {/* Question Details (Clean display without category badges) */}
           {questionData && (
             <div>
-              <div className="question-meta" style={{ marginBottom: '14px' }}>
-                <span className={`category-tag ${questionData.category === 'WEB_DEVELOPMENT' ? 'tag-web' : 'tag-biz'}`}>
-                  {questionData.category === 'WEB_DEVELOPMENT' ? 'Web Development' : 'Business Development'}
-                </span>
-              </div>
-
               <div className="question-text">
                 {questionData.question}
               </div>
@@ -330,9 +383,13 @@ export default function TestPage() {
               {/* Bottom Actions */}
               <div className="test-footer-actions">
                 <div style={{ fontSize: '0.825rem', color: '#64748b' }}>
-                  {selectedOption && (
+                  {selectedOption ? (
                     <span style={{ color: '#16a34a', fontWeight: '600' }}>
-                      &bull; Option {selectedOption} selected
+                      &bull; Option {selectedOption} chosen &mdash; moving to next question...
+                    </span>
+                  ) : (
+                    <span style={{ color: '#64748b' }}>
+                      Click an option to automatically advance, or click Skip Question.
                     </span>
                   )}
                 </div>
@@ -341,12 +398,13 @@ export default function TestPage() {
                   {currentNumber < totalQuestions ? (
                     <button
                       type="button"
-                      className="btn btn-primary"
+                      className="btn btn-secondary"
                       onClick={handleNext}
                       disabled={submitting}
+                      style={{ fontSize: '0.875rem', padding: '9px 18px' }}
                     >
-                      <span>Next</span>
-                      <ArrowRight size={18} />
+                      <span>Skip Question</span>
+                      <ArrowRight size={16} />
                     </button>
                   ) : (
                     <button

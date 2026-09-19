@@ -18,7 +18,7 @@ async function autoSubmitTest(candidateId) {
   // Calculate score
   const scoreRow = await db.get('SELECT COUNT(*) as correctCount FROM answers WHERE candidateId = ? AND isCorrect = 1', [candidateId]);
   const score = Number(scoreRow?.correctCount || scoreRow?.correctcount || 0);
-  const total = 40;
+  const total = 50;
   const percentage = Math.round((score / total) * 100 * 100) / 100;
 
   // Update candidate
@@ -106,7 +106,7 @@ exports.startTest = async (req, res) => {
           candidateId: candidate.id,
           candidateName: candidate.fullName,
           currentQuestion: existingSession.currentQuestion,
-          totalQuestions: 40,
+          totalQuestions: 50,
           remainingSeconds,
           status: existingSession.status,
           endTime: existingSession.endTime
@@ -115,21 +115,21 @@ exports.startTest = async (req, res) => {
     }
 
     // New Session Creation for Candidate
-    // 1. Fetch all 40 active questions
+    // 1. Fetch all 50 active questions
     const allQuestions = await db.all('SELECT * FROM questions WHERE isActive = 1');
-    if (allQuestions.length < 40) {
+    if (allQuestions.length < 50) {
       return res.status(500).json({ success: false, message: 'Insufficient questions in the assessment bank.' });
     }
 
-    // 2. Separate into Web Dev and Biz Dev to maintain exact 20 + 20 distribution
+    // 2. Separate into Web Dev (30) and Biz Dev (20)
     const webQuestions = allQuestions.filter(q => q.category === 'WEB_DEVELOPMENT');
     const bizQuestions = allQuestions.filter(q => q.category === 'BUSINESS_DEVELOPMENT');
 
     // Cryptographically shuffle each category independently
-    const shuffledWeb = shuffleArray(webQuestions).slice(0, 20);
+    const shuffledWeb = shuffleArray(webQuestions).slice(0, 30);
     const shuffledBiz = shuffleArray(bizQuestions).slice(0, 20);
 
-    // Combine and shuffle the entire 40 questions uniquely for this candidate
+    // Combine and shuffle the entire 50 questions uniquely for this candidate
     const candidateQuestions = shuffleArray([...shuffledWeb, ...shuffledBiz]);
     const questionOrder = candidateQuestions.map(q => q.id);
 
@@ -154,9 +154,9 @@ exports.startTest = async (req, res) => {
       };
     }
 
-    // 4. Set duration: 12 minutes (40 questions x 15s = 10 mins + 2 mins buffer)
+    // 4. Set duration: 15 minutes (50 questions x 15s = 12.5 mins + 2.5 mins buffer)
     const startTime = new Date();
-    const endTime = new Date(startTime.getTime() + 12 * 60 * 1000);
+    const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
 
     await db.run(`
       INSERT INTO test_sessions (
@@ -185,8 +185,8 @@ exports.startTest = async (req, res) => {
         candidateId: candidate.id,
         candidateName: candidate.fullName,
         currentQuestion: 1,
-        totalQuestions: 40,
-        remainingSeconds: 12 * 60,
+        totalQuestions: 50,
+        remainingSeconds: 15 * 60,
         status: 'IN_PROGRESS',
         endTime: endTime.toISOString()
       }
@@ -223,7 +223,7 @@ exports.getSession = async (req, res) => {
         remainingSeconds: 0,
         candidateName: candidate.fullName,
         currentQuestion: session.currentQuestion,
-        totalQuestions: 40
+        totalQuestions: 50
       });
     }
 
@@ -232,7 +232,7 @@ exports.getSession = async (req, res) => {
       candidateId: candidate.id,
       candidateName: candidate.fullName,
       currentQuestion: session.currentQuestion,
-      totalQuestions: 40,
+      totalQuestions: 50,
       remainingSeconds,
       status: session.status,
       endTime: session.endTime
@@ -374,7 +374,7 @@ exports.submitAnswer = async (req, res) => {
 
     // If candidate skipped or selected nothing
     if (!selectedOption) {
-      const nextQuestion = Math.min(40, Math.max(session.currentQuestion, questionNumber + 1));
+      const nextQuestion = Math.min(50, Math.max(session.currentQuestion, questionNumber + 1));
       await db.run('UPDATE test_sessions SET currentQuestion = ? WHERE candidateId = ?', [nextQuestion, candidateId]);
 
       return res.status(200).json({
@@ -414,7 +414,7 @@ exports.submitAnswer = async (req, res) => {
     ]);
 
     // Update current question in session
-    const nextQuestion = Math.min(40, Math.max(session.currentQuestion, questionNumber + 1));
+    const nextQuestion = Math.min(50, Math.max(session.currentQuestion, questionNumber + 1));
     await db.run('UPDATE test_sessions SET currentQuestion = ? WHERE candidateId = ?', [nextQuestion, candidateId]);
 
     return res.status(200).json({
@@ -458,7 +458,7 @@ exports.submitTest = async (req, res) => {
     // Calculate score
     const scoreRow = await db.get('SELECT COUNT(*) as correctCount FROM answers WHERE candidateId = ? AND isCorrect = 1', [candidateId]);
     const score = Number(scoreRow?.correctCount || scoreRow?.correctcount || 0);
-    const total = 40;
+    const total = 50;
     const percentage = Math.round((score / total) * 100 * 100) / 100;
 
     // Update candidate
@@ -482,7 +482,7 @@ exports.submitTest = async (req, res) => {
       status: finalStatus,
       submittedAt: now,
       score: showScore ? score : undefined,
-      totalQuestions: 40
+      totalQuestions: 50
     });
 
   } catch (err) {

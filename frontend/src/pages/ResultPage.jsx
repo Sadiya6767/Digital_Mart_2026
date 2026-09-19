@@ -74,7 +74,7 @@ export default function ResultPage() {
               <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: '#64748b', fontSize: '0.95rem' }}>Your Score:</span>
                 <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1d4ed8' }}>
-                  {submission.score} / 40
+                  {submission.score} / {submission.totalQuestions || 50}
                 </span>
               </div>
             )}

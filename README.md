@@ -11,34 +11,41 @@ A full-stack, enterprise-grade Online Assessment Platform built for **Digital Ma
    - PDF Resume upload with Multer (validated mime-type and 5 MB size limit).
    - Mandatory confirmation declaration before test access.
 
-2. **Assessment & Question Bank (30 MCQs)**:
-   - **15 Web Development MCQs**: Semantic HTML, CSS Box Model, Flexbox, Responsive Design, JavaScript Scope (TDZ), Promises/Event Loop, DOM Delegation, React State & Hooks, REST APIs, Git, SQL Joins.
-   - **15 Business Development & Sales MCQs**: BANT lead qualification, cold outreach, objection handling (budget, timing), CRM pipeline hygiene, B2B vs B2C, LTV:CAC unit economics, negotiation tactics, scope creep management.
-   - Categorized by difficulty: 30% Basic, 50% Intermediate, 20% Practical Application.
+2. **Assessment & Question Bank (40 MCQs)**:
+   - **20 Web Development MCQs**: Semantic HTML, CSS Box Model, Flexbox, Responsive Design, JavaScript Scope (TDZ), Promises/Event Loop, DOM Delegation, React State & Hooks, REST APIs, Git, SQL.
+   - **20 Business Development & Sales MCQs**: BANT lead qualification, cold outreach, objection handling, CRM pipeline, B2B vs B2C, LTV:CAC, negotiation tactics, digital marketing.
+   - Clean question display without category badges.
+   - Allows candidates to skip questions without answering if they choose.
 
 3. **Randomized Question & Option Sequences**:
    - Every candidate receives a unique question sequence generated via Fisher-Yates shuffle.
    - Option order (A, B, C, D) is also shuffled per question while preserving backend answer correctness.
    - Shuffled sequence is saved in `test_sessions` to guarantee fixed question order across browser reloads.
 
-4. **Synchronized 30-Minute Authoritative Timer**:
-   - Backend-governed test duration with start and end timestamps.
-   - Survives page refreshes and browser tab closures.
-   - Warning notifications at **10 minutes**, **5 minutes**, and **1 minute** remaining.
-   - Automatically submits when 30 minutes expire.
+4. **15-Second Running Line Timer (Green, Orange, Red)**:
+   - High-precision wall-clock timer for each question.
+   - Prominent animated progress line at the top of the question card:
+     - **Green** (> 8s)
+     - **Orange** (4s - 8s)
+     - **Red** (< 4s with pulse)
+   - Automatically saves response (or null if skipped) and auto-advances when 15 seconds expire.
 
-5. **Security & Anti-Cheating Controls**:
+5. **Single-Candidate Concurrency Lock**:
+   - Only 1 candidate can take the assessment at a time.
+   - Automatically informs subsequent candidates if another candidate is actively taking the test and provides a retry mechanism once the active test finishes.
+
+6. **Security & Anti-Cheating Controls**:
    - Zero correct answers exposed to the student browser.
    - Text selection disabled on questions (`user-select: none`).
    - Non-invasive tab switch detection alerts students if they navigate away.
    - Strict one-submission policy per candidate email.
 
-6. **Admin Dashboard & Analytics**:
+7. **Admin Dashboard & Analytics**:
    - Accessible via private route: `/admin/login`.
    - KPI Summary: Total Candidates, Completed, In Progress, Auto Submitted, Registered Only, Average Score.
    - Candidate filtering (by Status and College), text search (Name, Email, Phone), and sorting by Score and Date.
    - "View Resume" opens candidate PDF directly.
-   - "View Details" opens comprehensive breakdown: Scorecard, percentage, and question-by-question analysis (Correct in green, Incorrect in red).
+   - "View Details" opens comprehensive breakdown: Scorecard, percentage, and question-by-question analysis (Correct in green, Incorrect in red, Skipped in gray).
    - Configurable settings: Toggle `SHOW_STUDENT_SCORE` and `ENABLE_TAB_WARNING`.
 
 ---

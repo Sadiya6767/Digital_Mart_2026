@@ -222,7 +222,7 @@ if (isPostgres) {
         testStartedAt TEXT,
         testSubmittedAt TEXT,
         score INTEGER DEFAULT 0,
-        totalQuestions INTEGER DEFAULT 40,
+        totalQuestions INTEGER DEFAULT 50,
         percentage REAL DEFAULT 0.0,
         status TEXT DEFAULT 'REGISTERED'
       );
