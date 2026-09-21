@@ -32,6 +32,7 @@ export default function AdminDashboardPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [collegeFilter, setCollegeFilter] = useState('ALL');
+  const [profileFilter, setProfileFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState('score');
   const [sortOrder, setSortOrder] = useState('DESC');
 
@@ -69,6 +70,7 @@ export default function AdminDashboardPage() {
         search,
         status: statusFilter,
         college: collegeFilter,
+        profile: profileFilter,
         sortBy,
         sortOrder
       };
@@ -121,7 +123,7 @@ export default function AdminDashboardPage() {
     if (token) {
       fetchData();
     }
-  }, [statusFilter, collegeFilter, sortBy, sortOrder]);
+  }, [statusFilter, collegeFilter, profileFilter, sortBy, sortOrder]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -388,7 +390,7 @@ export default function AdminDashboardPage() {
 
           <div className="stat-card">
             <span className="stat-label">Average Score</span>
-            <span className="stat-value" style={{ color: '#1d4ed8' }}>{stats.avgScore} <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#64748b' }}>/ 50</span></span>
+            <span className="stat-value" style={{ color: '#1d4ed8' }}>{stats.avgScore} <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#64748b' }}>/ 30</span></span>
           </div>
         </div>
 
@@ -405,6 +407,19 @@ export default function AdminDashboardPage() {
               style={{ paddingLeft: '34px' }}
             />
             <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '12px' }} />
+          </div>
+
+          {/* Job Profile Filter */}
+          <div style={{ width: '220px' }}>
+            <select
+              value={profileFilter}
+              onChange={(e) => setProfileFilter(e.target.value)}
+              className="form-select"
+            >
+              <option value="ALL">All Profiles</option>
+              <option value="Web Development">Web Development</option>
+              <option value="Business Development Executive">Business Dev Executive</option>
+            </select>
           </div>
 
           {/* Status Filter */}
@@ -481,6 +496,7 @@ export default function AdminDashboardPage() {
                   />
                 </th>
                 <th>Candidate Name</th>
+                <th>Job Profile</th>
                 <th>Contact Info</th>
                 <th>College & Branch</th>
                 <th>Score</th>
@@ -494,13 +510,13 @@ export default function AdminDashboardPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                     Loading candidate data...
                   </td>
                 </tr>
               ) : candidates.length === 0 ? (
                 <tr>
-                  <td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                     No candidates found matching the criteria.
                   </td>
                 </tr>
@@ -520,6 +536,19 @@ export default function AdminDashboardPage() {
                       <div style={{ fontSize: '0.75rem', color: '#64748b' }}>ID: #{c.id} &bull; Grad {c.graduationYear}</div>
                     </td>
                     <td>
+                      <span style={{
+                        display: 'inline-block',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        padding: '3px 8px',
+                        borderRadius: '8px',
+                        backgroundColor: (c.jobProfile || c.jobprofile) === 'Business Development Executive' ? '#cffafe' : '#dbeafe',
+                        color: (c.jobProfile || c.jobprofile) === 'Business Development Executive' ? '#0891b2' : '#1d4ed8'
+                      }}>
+                        {c.jobProfile || c.jobprofile || 'Web Development'}
+                      </span>
+                    </td>
+                    <td>
                       <div>{c.email}</div>
                       <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{c.phone}</div>
                     </td>
@@ -529,7 +558,7 @@ export default function AdminDashboardPage() {
                     </td>
                     <td>
                       <div style={{ fontWeight: '800', color: '#1d4ed8', fontSize: '1rem' }}>
-                        {c.status === 'COMPLETED' || c.status === 'AUTO_SUBMITTED' ? `${c.score} / 40` : '-'}
+                        {c.status === 'COMPLETED' || c.status === 'AUTO_SUBMITTED' ? `${c.score} / ${c.totalQuestions || c.totalquestions || 30}` : '-'}
                       </div>
                     </td>
                     <td>
@@ -687,6 +716,9 @@ export default function AdminDashboardPage() {
                     </div>
                     <div>
                       <span style={{ color: '#64748b' }}>Graduation Year:</span> <strong>{candidateDetails.candidate.graduationYear}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b' }}>Job Profile:</span> <strong style={{ color: candidateDetails.candidate.jobProfile === 'Business Development Executive' ? '#0891b2' : '#1d4ed8' }}>{candidateDetails.candidate.jobProfile || 'Web Development'}</strong>
                     </div>
                     <div>
                       <span style={{ color: '#64748b' }}>Test Started:</span> <strong>{formatDate(candidateDetails.candidate.testStartedAt)}</strong>

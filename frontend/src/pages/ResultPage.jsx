@@ -17,6 +17,7 @@ export default function ResultPage() {
   }, []);
 
   const candidateName = submission?.candidateName || sessionStorage.getItem('dm_candidate_name') || 'Candidate';
+  const jobProfile = submission?.jobProfile || sessionStorage.getItem('dm_job_profile') || 'Web Development';
   const showScore = submission?.score !== undefined && submission?.score !== null;
 
   return (
@@ -42,17 +43,28 @@ export default function ResultPage() {
             Assessment Submitted Successfully
           </h2>
 
-          <div style={{
-            display: 'inline-block',
-            backgroundColor: '#f1f5f9',
-            padding: '6px 16px',
-            borderRadius: '20px',
-            fontSize: '0.875rem',
-            fontWeight: '600',
-            color: '#334155',
-            marginBottom: '24px'
-          }}>
-            Candidate: <strong>{candidateName}</strong>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
+            <div style={{
+              backgroundColor: '#f1f5f9',
+              padding: '6px 16px',
+              borderRadius: '20px',
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              color: '#334155'
+            }}>
+              Candidate: <strong>{candidateName}</strong>
+            </div>
+
+            <div style={{
+              backgroundColor: jobProfile === 'Business Development Executive' ? '#cffafe' : '#dbeafe',
+              color: jobProfile === 'Business Development Executive' ? '#0891b2' : '#1d4ed8',
+              padding: '6px 16px',
+              borderRadius: '20px',
+              fontSize: '0.875rem',
+              fontWeight: '700'
+            }}>
+              {jobProfile}
+            </div>
           </div>
 
           <div style={{
@@ -74,7 +86,7 @@ export default function ResultPage() {
               <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: '#64748b', fontSize: '0.95rem' }}>Your Score:</span>
                 <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1d4ed8' }}>
-                  {submission.score} / {submission.totalQuestions || 50}
+                  {submission.score} / {submission.totalQuestions || 30}
                 </span>
               </div>
             )}

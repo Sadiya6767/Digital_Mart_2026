@@ -14,10 +14,11 @@ export default function TestPage() {
 
   const candidateId = sessionStorage.getItem('dm_candidate_id');
   const candidateName = sessionStorage.getItem('dm_candidate_name') || 'Candidate';
+  const [jobProfile, setJobProfile] = useState(sessionStorage.getItem('dm_job_profile') || 'Web Development');
 
   const [loading, setLoading] = useState(true);
   const [currentNumber, setCurrentNumber] = useState(1);
-  const [totalQuestions, setTotalQuestions] = useState(50);
+  const [totalQuestions, setTotalQuestions] = useState(30);
   const [questionData, setQuestionData] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -38,10 +39,10 @@ export default function TestPage() {
   const currentNumberRef = useRef(1);
   currentNumberRef.current = currentNumber;
 
-  const totalQuestionsRef = useRef(50);
+  const totalQuestionsRef = useRef(30);
   totalQuestionsRef.current = totalQuestions;
 
-  // Redirect if not registered
+  // Redirect if not registered & Enforce Anti-cheating listeners
   useEffect(() => {
     if (!candidateId) {
       navigate('/');
@@ -50,16 +51,78 @@ export default function TestPage() {
 
     initSession();
 
-    // Tab switch listener
+    // 1. Anti-Cheat: Prevent Browser Back Navigation (popstate trap)
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', handlePopState);
+
+    // 2. Anti-Cheat: Prevent Accidental Page Refresh / Tab Close
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'Assessment is in progress. Are you sure you want to leave?';
+      return e.returnValue;
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // 3. Anti-Cheat: Prevent Right-Click Context Menu
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    // 4. Anti-Cheat: Block Copy / Cut / Paste
+    const handleClipboard = (e) => {
+      e.preventDefault();
+      return false;
+    };
+    document.addEventListener('copy', handleClipboard);
+    document.addEventListener('cut', handleClipboard);
+    document.addEventListener('paste', handleClipboard);
+
+    // 5. Anti-Cheat: Block Developer Tools, Source View, Print, and Back Key Shortcuts
+    const handleKeyDown = (e) => {
+      // Block F12
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+      // Block Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C (DevTools)
+      if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
+        e.preventDefault();
+        return false;
+      }
+      // Block Ctrl+U, Ctrl+S, Ctrl+P, Ctrl+C, Ctrl+V
+      if (e.ctrlKey && ['U', 'S', 'P', 'C', 'V'].includes(e.key.toUpperCase())) {
+        e.preventDefault();
+        return false;
+      }
+      // Block Alt+Left / Alt+Right navigation
+      if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        return false;
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    // 6. Anti-Cheat: Tab switch detection
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setShowTabWarning(true);
       }
     };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('copy', handleClipboard);
+      document.removeEventListener('cut', handleClipboard);
+      document.removeEventListener('paste', handleClipboard);
+      document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (questionTimerRef.current) clearInterval(questionTimerRef.current);
     };
@@ -86,9 +149,16 @@ export default function TestPage() {
         return;
       }
 
+      if (res.jobProfile) {
+        setJobProfile(res.jobProfile);
+        sessionStorage.setItem('dm_job_profile', res.jobProfile);
+      }
+
       const qNum = res.currentQuestion || 1;
       setCurrentNumber(qNum);
-      setTotalQuestions(res.totalQuestions || 50);
+      const total = res.totalQuestions || 30;
+      setTotalQuestions(total);
+      totalQuestionsRef.current = total;
 
       await loadQuestion(qNum);
 
@@ -303,14 +373,27 @@ export default function TestPage() {
       <Header />
 
       <div className="page-container">
-        <div className="content-card question-card">
-          {/* Top Bar: Question Progress */}
+        <div 
+          className="content-card question-card"
+          style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none' }}
+        >
+          {/* Top Bar: Question Progress & Job Profile */}
           <div className="test-header-bar">
             <div>
-              <div className="test-progress-info">
-                Question {currentNumber} of {totalQuestions}
+              <div className="test-progress-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span>Question {currentNumber} of {totalQuestions}</span>
+                <span style={{
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  padding: '3px 10px',
+                  borderRadius: '12px',
+                  backgroundColor: jobProfile === 'Business Development Executive' ? '#cffafe' : '#dbeafe',
+                  color: jobProfile === 'Business Development Executive' ? '#0891b2' : '#1d4ed8'
+                }}>
+                  {jobProfile}
+                </span>
               </div>
-              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '2px' }}>
                 Candidate: {candidateName}
               </div>
             </div>

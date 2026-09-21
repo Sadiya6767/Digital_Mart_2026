@@ -555,11 +555,121 @@ const questions = [
     optionD: 'Argue that the delay is not important',
     correctAnswer: 'B',
     difficulty: 'BASIC'
+  },
+  // 51 (Biz Dev 21)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'What is the primary purpose of "Lead Generation" in B2B business development?',
+    optionA: 'To immediately force every contact to sign a contract',
+    optionB: 'To identify and initiate contact with potential clients who have a genuine need for your services',
+    optionC: 'To collect random telephone numbers without any screening',
+    optionD: 'To reduce the marketing department budget',
+    correctAnswer: 'B',
+    difficulty: 'BASIC'
+  },
+  // 52 (Biz Dev 22)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'What does a strong "Value Proposition" communicate to a potential client?',
+    optionA: 'Why your solution uniquely solves their problem better and more cost-effectively than competitors',
+    optionB: 'A list of office rules and holidays',
+    optionC: 'The complete technical source code of your website',
+    optionD: 'The personal hobbies of the sales team',
+    correctAnswer: 'A',
+    difficulty: 'BASIC'
+  },
+  // 53 (Biz Dev 23)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'When cold calling a business owner, what should a BDE achieve in the first 20 seconds?',
+    optionA: 'State your name and company, hook their interest with a relevant business benefit, and ask for permission to speak',
+    optionB: 'Speak non-stop for 5 minutes without taking a breath',
+    optionC: 'Ask for their bank account credentials',
+    optionD: 'Insult their existing website and marketing strategy aggressively',
+    correctAnswer: 'A',
+    difficulty: 'BASIC'
+  },
+  // 54 (Biz Dev 24)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'In the popular BANT sales qualification framework, what does "B" stand for?',
+    optionA: 'Brand',
+    optionB: 'Budget',
+    optionC: 'Buyer',
+    optionD: 'Balance',
+    correctAnswer: 'B',
+    difficulty: 'BASIC'
+  },
+  // 55 (Biz Dev 25)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'What is the primary difference between "Inbound Leads" and "Outbound Leads"?',
+    optionA: 'Inbound leads contact you after finding your brand, while outbound leads are actively reached out to by your sales team',
+    optionB: 'Inbound leads are always free, outbound leads are illegal',
+    optionC: 'Outbound leads are only from foreign countries',
+    optionD: 'There is no difference between them',
+    correctAnswer: 'A',
+    difficulty: 'BASIC'
+  },
+  // 56 (Biz Dev 26)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'What does "CAC" stand for in sales and marketing performance analytics?',
+    optionA: 'Company Annual Capital',
+    optionB: 'Customer Acquisition Cost',
+    optionC: 'Client Account Credit',
+    optionD: 'Corporate Advertising Commission',
+    correctAnswer: 'B',
+    difficulty: 'BASIC'
+  },
+  // 57 (Biz Dev 27)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'Before sending a formal commercial proposal to a prospect, what should a BDE first clarify?',
+    optionA: 'The prospect\'s exact scope requirements, expected timeline, and agreed budget expectations',
+    optionB: 'The prospect\'s favorite sports team',
+    optionC: 'Only the invoice payment gateway details',
+    optionD: 'Nothing; proposals should always use a generic identical template',
+    correctAnswer: 'A',
+    difficulty: 'BASIC'
+  },
+  // 58 (Biz Dev 28)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'Why is client relationship management and post-sales retention vital for sustainable business growth?',
+    optionA: 'Retaining and upselling happy clients is significantly more cost-effective and generates steady referral revenue',
+    optionB: 'Existing clients do not expect quality service',
+    optionC: 'It replaces the need to pay taxes',
+    optionD: 'It requires zero communication effort',
+    correctAnswer: 'A',
+    difficulty: 'BASIC'
+  },
+  // 59 (Biz Dev 29)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'What is "Cold Email Outreach"?',
+    optionA: 'Sending personalized business emails to prospective clients who have had no prior direct contact with your firm',
+    optionB: 'Sending spam emails to 1 million random personal email IDs',
+    optionC: 'Writing emails during the winter season only',
+    optionD: 'An automated rejection email to job applicants',
+    correctAnswer: 'A',
+    difficulty: 'BASIC'
+  },
+  // 60 (Biz Dev 30)
+  {
+    category: 'BUSINESS_DEVELOPMENT',
+    question: 'How should a BDE position Digital Mart Solutions when a client wants to grow local business footfall?',
+    optionA: 'Recommend Local SEO, Google Business Profile optimization, and targeted geo-fenced digital campaigns',
+    optionB: 'Tell the client that local businesses cannot benefit from the internet',
+    optionC: 'Advise them to shut down their physical shop and sell only on social media',
+    optionD: 'Promise guaranteed 1st position on Google within 1 hour',
+    correctAnswer: 'A',
+    difficulty: 'BASIC'
   }
 ];
 
 async function seed() {
-  console.log('--- Starting Database Seeding (50 Questions: 30 Web Dev + 20 Biz Dev) ---');
+  console.log('--- Starting Database Seeding (60 Questions: 30 Web Dev + 30 Biz Dev) ---');
 
   // Seed or update Admin user
   const adminCheck = await db.get('SELECT id FROM admin_users WHERE username = ?', [config.ADMIN_USERNAME]);
@@ -599,7 +709,7 @@ async function seed() {
     ]);
     inserted++;
   }
-  console.log(`Successfully seeded ${inserted} questions (30 Web Dev + 20 Biz Dev)!`);
+  console.log(`Successfully seeded ${inserted} questions (30 Web Dev + 30 Biz Dev = 60 Total)!`);
   console.log('--- Seeding Completed Successfully ---');
 }
 

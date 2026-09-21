@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Code2, Briefcase, CheckCircle2 } from 'lucide-react';
 import Header from '../components/Header';
 import { api } from '../services/api';
 
@@ -8,6 +8,7 @@ export default function RegistrationPage() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
+    jobProfile: 'Web Development', // 'Web Development' | 'Business Development Executive'
     fullName: '',
     email: '',
     phone: '',
@@ -58,6 +59,7 @@ export default function RegistrationPage() {
   const validateForm = () => {
     const newErrors = {};
 
+    if (!formData.jobProfile) newErrors.jobProfile = 'Please select your target job profile.';
     if (!formData.fullName.trim()) newErrors.fullName = 'Full Name is required.';
     
     // Email validation
@@ -106,6 +108,7 @@ export default function RegistrationPage() {
 
     try {
       const data = new FormData();
+      data.append('jobProfile', formData.jobProfile);
       data.append('fullName', formData.fullName.trim());
       data.append('email', formData.email.trim().toLowerCase());
       data.append('phone', formData.phone.trim());
@@ -128,6 +131,7 @@ export default function RegistrationPage() {
       sessionStorage.setItem('dm_candidate_id', res.candidate.id);
       sessionStorage.setItem('dm_candidate_name', res.candidate.fullName);
       sessionStorage.setItem('dm_candidate_email', res.candidate.email);
+      sessionStorage.setItem('dm_job_profile', res.candidate.jobProfile || formData.jobProfile);
 
       // Start the test session
       const testRes = await api.startTest(res.candidate.id);
@@ -205,6 +209,141 @@ export default function RegistrationPage() {
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="form-grid">
+              {/* Step 1: Select Job Profile */}
+              <div className="form-group form-full" style={{ marginBottom: '8px' }}>
+                <label className="form-label" style={{ fontSize: '1rem', fontWeight: '700', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>Step 1: Select Your Job Profile</span>
+                  <span className="req">*</span>
+                </label>
+                <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '12px' }}>
+                  Select the position you are applying for. Your 30 assessment questions will be strictly tailored to this profile.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+                  {/* Web Development Card */}
+                  <div
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, jobProfile: 'Web Development' }));
+                      if (errors.jobProfile) setErrors(prev => ({ ...prev, jobProfile: null }));
+                    }}
+                    style={{
+                      border: formData.jobProfile === 'Web Development' ? '2.5px solid #1d4ed8' : '1.5px solid #cbd5e1',
+                      backgroundColor: formData.jobProfile === 'Web Development' ? '#eff6ff' : '#ffffff',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.jobProfile === 'Web Development' ? '0 4px 14px rgba(29, 78, 216, 0.18)' : 'none',
+                      position: 'relative'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '10px',
+                        backgroundColor: formData.jobProfile === 'Web Development' ? '#1d4ed8' : '#f1f5f9',
+                        color: formData.jobProfile === 'Web Development' ? '#ffffff' : '#475569',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        <Code2 size={22} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>Web Development</h3>
+                          {formData.jobProfile === 'Web Development' && (
+                            <CheckCircle2 size={18} color="#1d4ed8" />
+                          )}
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px', lineHeight: '1.4' }}>
+                          HTML, CSS, JavaScript, Frontend &amp; Backend Web Engineering concepts
+                        </p>
+                        <div style={{
+                          display: 'inline-block',
+                          marginTop: '8px',
+                          fontSize: '0.725rem',
+                          fontWeight: '700',
+                          color: '#1d4ed8',
+                          backgroundColor: '#dbeafe',
+                          padding: '3px 8px',
+                          borderRadius: '6px'
+                        }}>
+                          30 Questions &bull; 15 Mins
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Business Development Executive Card */}
+                  <div
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, jobProfile: 'Business Development Executive' }));
+                      if (errors.jobProfile) setErrors(prev => ({ ...prev, jobProfile: null }));
+                    }}
+                    style={{
+                      border: formData.jobProfile === 'Business Development Executive' ? '2.5px solid #0891b2' : '1.5px solid #cbd5e1',
+                      backgroundColor: formData.jobProfile === 'Business Development Executive' ? '#ecfeff' : '#ffffff',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.jobProfile === 'Business Development Executive' ? '0 4px 14px rgba(8, 145, 178, 0.18)' : 'none',
+                      position: 'relative'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '10px',
+                        backgroundColor: formData.jobProfile === 'Business Development Executive' ? '#0891b2' : '#f1f5f9',
+                        color: formData.jobProfile === 'Business Development Executive' ? '#ffffff' : '#475569',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        <Briefcase size={22} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>Business Development Executive</h3>
+                          {formData.jobProfile === 'Business Development Executive' && (
+                            <CheckCircle2 size={18} color="#0891b2" />
+                          )}
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px', lineHeight: '1.4' }}>
+                          Client Pitching, Lead Gen, Sales Funnels, Negotiation &amp; Strategy
+                        </p>
+                        <div style={{
+                          display: 'inline-block',
+                          marginTop: '8px',
+                          fontSize: '0.725rem',
+                          fontWeight: '700',
+                          color: '#0891b2',
+                          backgroundColor: '#cffafe',
+                          padding: '3px 8px',
+                          borderRadius: '6px'
+                        }}>
+                          30 Questions &bull; 15 Mins
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {errors.jobProfile && <span className="field-error">{errors.jobProfile}</span>}
+              </div>
+
+              {/* Divider for Step 2 */}
+              <div className="form-group form-full" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', marginTop: '8px' }}>
+                <label className="form-label" style={{ fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>
+                  Step 2: Candidate Details
+                </label>
+              </div>
+
               {/* Full Name */}
               <div className="form-group form-full">
                 <label className="form-label" htmlFor="fullName">

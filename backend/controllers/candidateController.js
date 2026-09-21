@@ -27,6 +27,7 @@ exports.registerCandidate = async (req, res) => {
       degree,
       branch,
       graduationYear,
+      jobProfile,
       confirmed
     } = req.body;
 
@@ -38,6 +39,12 @@ exports.registerCandidate = async (req, res) => {
     if (confirmed !== 'true' && confirmed !== true) {
       return res.status(400).json({ success: false, message: 'Please confirm that the information provided is correct.' });
     }
+
+    // Validate job profile (must be Web Development or Business Development Executive)
+    const allowedProfiles = ['Web Development', 'Business Development Executive'];
+    const validProfile = (jobProfile && allowedProfiles.includes(jobProfile.trim()))
+      ? jobProfile.trim()
+      : 'Web Development';
 
     // 2. Validate email
     const trimmedEmail = email.trim().toLowerCase();
@@ -93,17 +100,18 @@ exports.registerCandidate = async (req, res) => {
           id: existing.id,
           fullName: existing.fullName,
           email: existing.email,
+          jobProfile: existing.jobProfile || existing.jobprofile || 'Web Development',
           status: existing.status
         }
       });
     }
 
-    // 7. Insert new candidate
+    // 7. Insert new candidate with selected job profile
     const result = await db.run(`
       INSERT INTO candidates (
         fullName, email, phone, collegeName, degree, branch, graduationYear,
-        resumePath, resumeData, registeredAt, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REGISTERED')
+        jobProfile, resumePath, resumeData, registeredAt, totalQuestions, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 30, 'REGISTERED')
     `, [
       fullName.trim(),
       trimmedEmail,
@@ -112,6 +120,7 @@ exports.registerCandidate = async (req, res) => {
       degree.trim(),
       branch.trim(),
       gradYearNum,
+      validProfile,
       resumePath,
       resumeData,
       new Date().toISOString()
@@ -126,6 +135,7 @@ exports.registerCandidate = async (req, res) => {
         id: candidateId,
         fullName: fullName.trim(),
         email: trimmedEmail,
+        jobProfile: validProfile,
         status: 'REGISTERED'
       }
     });
@@ -139,7 +149,7 @@ exports.registerCandidate = async (req, res) => {
 exports.getCandidateById = async (req, res) => {
   try {
     const candidateId = parseInt(req.params.id, 10);
-    const candidate = await db.get('SELECT id, fullName, email, phone, collegeName, degree, branch, graduationYear, status, registeredAt, testStartedAt, testSubmittedAt FROM candidates WHERE id = ?', [candidateId]);
+    const candidate = await db.get('SELECT id, fullName, email, phone, collegeName, degree, branch, graduationYear, jobProfile, status, registeredAt, testStartedAt, testSubmittedAt FROM candidates WHERE id = ?', [candidateId]);
     if (!candidate) {
       return res.status(404).json({ success: false, message: 'Candidate not found.' });
     }

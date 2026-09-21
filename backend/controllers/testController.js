@@ -7,7 +7,7 @@ let lastCacheTime = 0;
 
 async function getCachedQuestions() {
   const now = Date.now();
-  if (cachedQuestions && cachedQuestions.length >= 50 && (now - lastCacheTime < 10 * 60 * 1000)) {
+  if (cachedQuestions && cachedQuestions.length >= 60 && (now - lastCacheTime < 10 * 60 * 1000)) {
     return cachedQuestions;
   }
   const all = await db.all('SELECT * FROM questions WHERE isActive = 1');
@@ -35,7 +35,9 @@ async function autoSubmitTest(candidateId) {
   // Calculate score
   const scoreRow = await db.get('SELECT COUNT(*) as correctCount FROM answers WHERE candidateId = ? AND isCorrect = 1', [candidateId]);
   const score = Number(scoreRow?.correctCount || scoreRow?.correctcount || 0);
-  const total = 50;
+
+  const cand = await db.get('SELECT totalQuestions, totalquestions FROM candidates WHERE id = ?', [candidateId]);
+  const total = Number(cand?.totalQuestions || cand?.totalquestions || 30);
   const percentage = Math.round((score / total) * 100 * 100) / 100;
 
   // Update candidate
@@ -83,6 +85,14 @@ exports.startTest = async (req, res) => {
       const sessionEndTime = existingSession.endTime || existingSession.endtime;
       const sessionCurrQ = existingSession.currentQuestion || existingSession.currentquestion || 1;
       const candName = candidate.fullName || candidate.fullname || 'Candidate';
+      const candProfile = candidate.jobProfile || candidate.jobprofile || 'Web Development';
+
+      let totalQ = Number(candidate.totalQuestions || candidate.totalquestions || 30);
+      try {
+        const qOrder = JSON.parse(existingSession.questionOrder || existingSession.questionorder);
+        if (qOrder && qOrder.length) totalQ = qOrder.length;
+      } catch (e) {}
+
       const now = new Date();
       const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date();
       const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
@@ -103,8 +113,9 @@ exports.startTest = async (req, res) => {
         session: {
           candidateId: candidate.id,
           candidateName: candName,
+          jobProfile: candProfile,
           currentQuestion: sessionCurrQ,
-          totalQuestions: 50,
+          totalQuestions: totalQ,
           remainingSeconds,
           status: existingSession.status,
           endTime: sessionEndTime
@@ -115,20 +126,27 @@ exports.startTest = async (req, res) => {
     // New Session Creation for Candidate
     // 1. Fetch questions from ultra-fast cache
     const allQuestions = await getCachedQuestions();
-    if (allQuestions.length < 50) {
+    if (allQuestions.length < 30) {
       return res.status(500).json({ success: false, message: 'Insufficient questions in the assessment bank.' });
     }
 
-    // 2. Separate into Web Dev (30) and Biz Dev (20)
-    const webQuestions = allQuestions.filter(q => (q.category || '').toUpperCase() === 'WEB_DEVELOPMENT');
-    const bizQuestions = allQuestions.filter(q => (q.category || '').toUpperCase() === 'BUSINESS_DEVELOPMENT');
+    // 2. Filter questions strictly according to candidate's chosen jobProfile (30 questions each)
+    const candProfile = candidate.jobProfile || candidate.jobprofile || 'Web Development';
+    const targetCategory = (candProfile === 'Business Development Executive')
+      ? 'BUSINESS_DEVELOPMENT'
+      : 'WEB_DEVELOPMENT';
 
-    // Cryptographically shuffle each category independently
-    const shuffledWeb = shuffleArray(webQuestions).slice(0, 30);
-    const shuffledBiz = shuffleArray(bizQuestions).slice(0, 20);
+    const profileQuestions = allQuestions.filter(q => (q.category || '').toUpperCase() === targetCategory);
 
-    // Combine and shuffle the entire 50 questions uniquely for this candidate
-    const candidateQuestions = shuffleArray([...shuffledWeb, ...shuffledBiz]);
+    if (profileQuestions.length < 30) {
+      return res.status(500).json({
+        success: false,
+        message: `Insufficient questions in the assessment bank for ${candProfile}. Required 30, found ${profileQuestions.length}.`
+      });
+    }
+
+    // Cryptographically shuffle and pick all 30 profile-specific questions uniquely for this candidate
+    const candidateQuestions = shuffleArray(profileQuestions).slice(0, 30);
     const questionOrder = candidateQuestions.map(q => q.id);
 
     // 3. Shuffle options for each question uniquely and store mapping
@@ -152,7 +170,7 @@ exports.startTest = async (req, res) => {
       };
     }
 
-    // 4. Set duration: 15 minutes (50 questions x 15s = 12.5 mins + 2.5 mins buffer)
+    // 4. Set duration: 15 minutes (30 questions x 15s = 7.5 mins + 7.5 mins buffer)
     const startTime = new Date();
     const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
 
@@ -169,12 +187,12 @@ exports.startTest = async (req, res) => {
       endTime.toISOString()
     ]);
 
-    // Update candidate status
+    // Update candidate status and totalQuestions
     await db.run(`
       UPDATE candidates 
-      SET status = 'IN_PROGRESS', testStartedAt = ?
+      SET status = 'IN_PROGRESS', testStartedAt = ?, totalQuestions = ?
       WHERE id = ?
-    `, [startTime.toISOString(), candidateId]);
+    `, [startTime.toISOString(), candidateQuestions.length, candidateId]);
 
     return res.status(201).json({
       success: true,
@@ -182,8 +200,9 @@ exports.startTest = async (req, res) => {
       session: {
         candidateId: candidate.id,
         candidateName: candidate.fullName,
+        jobProfile: candProfile,
         currentQuestion: 1,
-        totalQuestions: 50,
+        totalQuestions: candidateQuestions.length,
         remainingSeconds: 15 * 60,
         status: 'IN_PROGRESS',
         endTime: endTime.toISOString()
@@ -199,7 +218,7 @@ exports.startTest = async (req, res) => {
 exports.getSession = async (req, res) => {
   try {
     const candidateId = parseInt(req.params.candidateId, 10);
-    const candidate = await db.get('SELECT id, fullName, email, status FROM candidates WHERE id = ?', [candidateId]);
+    const candidate = await db.get('SELECT id, fullName, email, jobProfile, status, totalQuestions FROM candidates WHERE id = ?', [candidateId]);
     if (!candidate) {
       return res.status(404).json({ success: false, message: 'Candidate not found.' });
     }
@@ -213,6 +232,13 @@ exports.getSession = async (req, res) => {
     const sessionCurrQ = session.currentQuestion || session.currentquestion || 1;
     const sessionStatus = session.status || 'IN_PROGRESS';
     const candName = candidate.fullName || candidate.fullname || 'Candidate';
+    const candProfile = candidate.jobProfile || candidate.jobprofile || 'Web Development';
+
+    let totalQ = Number(candidate.totalQuestions || candidate.totalquestions || 30);
+    try {
+      const qOrder = JSON.parse(session.questionOrder || session.questionorder);
+      if (qOrder && qOrder.length) totalQ = qOrder.length;
+    } catch (e) {}
 
     const now = new Date();
     const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 15 * 60 * 1000);
@@ -225,8 +251,9 @@ exports.getSession = async (req, res) => {
         status: 'AUTO_SUBMITTED',
         remainingSeconds: 0,
         candidateName: candName,
+        jobProfile: candProfile,
         currentQuestion: sessionCurrQ,
-        totalQuestions: 50
+        totalQuestions: totalQ
       });
     }
 
@@ -234,8 +261,9 @@ exports.getSession = async (req, res) => {
       success: true,
       candidateId: candidate.id,
       candidateName: candName,
+      jobProfile: candProfile,
       currentQuestion: sessionCurrQ,
-      totalQuestions: 50,
+      totalQuestions: totalQ,
       remainingSeconds,
       status: sessionStatus,
       endTime: sessionEndTime
@@ -410,7 +438,7 @@ exports.submitAnswer = async (req, res) => {
 
     // If candidate skipped or selected nothing
     if (!selectedOption) {
-      const nextQuestion = Math.min(50, Math.max(sessionCurrQ, questionNumber + 1));
+      const nextQuestion = Math.min(questionOrder.length, Math.max(sessionCurrQ, questionNumber + 1));
       await db.run('UPDATE test_sessions SET currentQuestion = ? WHERE candidateId = ?', [nextQuestion, candidateId]);
 
       return res.status(200).json({
@@ -455,7 +483,7 @@ exports.submitAnswer = async (req, res) => {
     ]);
 
     // Update current question in session
-    const nextQuestion = Math.min(50, Math.max(sessionCurrQ, questionNumber + 1));
+    const nextQuestion = Math.min(questionOrder.length, Math.max(sessionCurrQ, questionNumber + 1));
     await db.run('UPDATE test_sessions SET currentQuestion = ? WHERE candidateId = ?', [nextQuestion, candidateId]);
 
     return res.status(200).json({
@@ -503,15 +531,23 @@ exports.submitTest = async (req, res) => {
     // Calculate score
     const scoreRow = await db.get('SELECT COUNT(*) as correctCount FROM answers WHERE candidateId = ? AND isCorrect = 1', [candidateId]);
     const score = Number(scoreRow?.correctCount || scoreRow?.correctcount || 0);
-    const total = 50;
+
+    let total = Number(candidate.totalQuestions || candidate.totalquestions || 30);
+    const session = await db.get('SELECT questionOrder, questionorder FROM test_sessions WHERE candidateId = ?', [candidateId]);
+    if (session) {
+      try {
+        const parsed = JSON.parse(session.questionOrder || session.questionorder);
+        if (parsed && parsed.length) total = parsed.length;
+      } catch (e) {}
+    }
     const percentage = Math.round((score / total) * 100 * 100) / 100;
 
     // Update candidate
     await db.run(`
       UPDATE candidates
-      SET status = ?, testSubmittedAt = ?, score = ?, percentage = ?
+      SET status = ?, testSubmittedAt = ?, score = ?, percentage = ?, totalQuestions = ?
       WHERE id = ?
-    `, [finalStatus, now, score, percentage, candidateId]);
+    `, [finalStatus, now, score, percentage, total, candidateId]);
 
     // Update session
     await db.run('UPDATE test_sessions SET status = ? WHERE candidateId = ?', [finalStatus, candidateId]);
@@ -524,10 +560,11 @@ exports.submitTest = async (req, res) => {
       success: true,
       message: 'Assessment submitted successfully.',
       candidateName: candName,
+      jobProfile: candidate.jobProfile || candidate.jobprofile || 'Web Development',
       status: finalStatus,
       submittedAt: now,
       score: showScore ? score : undefined,
-      totalQuestions: 50
+      totalQuestions: total
     });
 
   } catch (err) {

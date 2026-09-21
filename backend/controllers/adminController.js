@@ -72,7 +72,7 @@ exports.login = async (req, res) => {
 
 exports.getCandidates = async (req, res) => {
   try {
-    const { search, status, college, sortBy, sortOrder } = req.query;
+    const { search, status, college, profile, sortBy, sortOrder } = req.query;
 
     let query = 'SELECT * FROM candidates WHERE 1=1';
     const params = [];
@@ -91,6 +91,11 @@ exports.getCandidates = async (req, res) => {
     if (college && college !== 'ALL') {
       query += ' AND collegeName = ?';
       params.push(college);
+    }
+
+    if (profile && profile !== 'ALL') {
+      query += ' AND jobProfile = ?';
+      params.push(profile);
     }
 
     // Sorting
@@ -425,6 +430,7 @@ exports.exportCandidatesCSV = async (req, res) => {
     const headers = [
       'Candidate ID',
       'Full Name',
+      'Job Profile',
       'Email',
       'Phone',
       'College Name',
@@ -443,6 +449,7 @@ exports.exportCandidatesCSV = async (req, res) => {
     const rows = candidates.map(c => [
       c.id,
       `"${(c.fullName || c.fullname || '').replace(/"/g, '""')}"`,
+      `"${(c.jobProfile || c.jobprofile || 'Web Development').replace(/"/g, '""')}"`,
       `"${(c.email || '').replace(/"/g, '""')}"`,
       `"${(c.phone || '').replace(/"/g, '""')}"`,
       `"${(c.collegeName || c.collegename || '').replace(/"/g, '""')}"`,
@@ -451,7 +458,7 @@ exports.exportCandidatesCSV = async (req, res) => {
       c.graduationYear || c.graduationyear || '',
       c.status || '',
       c.score ?? 0,
-      c.totalQuestions || c.totalquestions || 50,
+      c.totalQuestions || c.totalquestions || 30,
       `"${c.percentage || 0}%"`,
       `"${c.registeredAt || c.registeredat || ''}"`,
       `"${c.testStartedAt || c.teststartedat || ''}"`,
