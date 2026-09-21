@@ -189,12 +189,11 @@ if (isPostgres) {
         CREATE INDEX IF NOT EXISTS idx_sessions_candidate ON test_sessions(candidateId);
         CREATE INDEX IF NOT EXISTS idx_answers_candidate ON answers(candidateId);
         CREATE INDEX IF NOT EXISTS idx_candidates_email ON candidates(email);
-        CREATE INDEX IF NOT EXISTS idx_candidates_jobprofile ON candidates(jobProfile);
         CREATE INDEX IF NOT EXISTS idx_sessions_status ON test_sessions(status);
         CREATE INDEX IF NOT EXISTS idx_questions_active ON questions(isActive);
       `);
 
-      // Ensure resumeData & jobProfile columns exist if table existed previously
+      // Ensure resumeData & jobProfile & totalQuestions columns exist if table existed previously
       try {
         await pool.query('ALTER TABLE candidates ADD COLUMN IF NOT EXISTS resumeData TEXT;');
       } catch (e) {
@@ -202,6 +201,16 @@ if (isPostgres) {
       }
       try {
         await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS jobProfile TEXT DEFAULT 'Web Development';");
+      } catch (e) {
+        // Ignored
+      }
+      try {
+        await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS totalQuestions INTEGER DEFAULT 30;");
+      } catch (e) {
+        // Ignored
+      }
+      try {
+        await pool.query('CREATE INDEX IF NOT EXISTS idx_candidates_jobprofile ON candidates(jobProfile);');
       } catch (e) {
         // Ignored
       }
@@ -236,16 +245,18 @@ if (isPostgres) {
       const qCountRes = await pool.query('SELECT COUNT(*) as count FROM questions');
       const currentCount = parseInt(qCountRes.rows[0].count, 10);
       if (currentCount < 60) {
-        console.log(`[Neon Postgres] Questions table has ${currentCount} questions. Seeding full 60 questions...`);
-        await pool.query('DELETE FROM questions');
+        console.log(`[Neon Postgres] Questions table has ${currentCount} questions. Ensuring full 60 questions...`);
         const { questions } = require('../database/seedQuestions');
         for (const q of questions) {
-          await pool.query(`
-            INSERT INTO questions (category, question, optionA, optionB, optionC, optionD, correctAnswer, difficulty, isActive)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 1)
-          `, [q.category, q.question, q.optionA, q.optionB, q.optionC, q.optionD, q.correctAnswer, q.difficulty]);
+          const exists = await pool.query('SELECT id FROM questions WHERE question = $1', [q.question]);
+          if (exists.rows.length === 0) {
+            await pool.query(`
+              INSERT INTO questions (category, question, optionA, optionB, optionC, optionD, correctAnswer, difficulty, isActive)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 1)
+            `, [q.category, q.question, q.optionA, q.optionB, q.optionC, q.optionD, q.correctAnswer, q.difficulty]);
+          }
         }
-        console.log(`[Neon Postgres] Successfully seeded all ${questions.length} questions.`);
+        console.log(`[Neon Postgres] Successfully verified and updated questions bank.`);
       }
 
       console.log('[Neon Postgres] Connected and verified successfully.');
@@ -348,12 +359,11 @@ if (isPostgres) {
       CREATE INDEX IF NOT EXISTS idx_sessions_candidate ON test_sessions(candidateId);
       CREATE INDEX IF NOT EXISTS idx_answers_candidate ON answers(candidateId);
       CREATE INDEX IF NOT EXISTS idx_candidates_email ON candidates(email);
-      CREATE INDEX IF NOT EXISTS idx_candidates_jobprofile ON candidates(jobProfile);
       CREATE INDEX IF NOT EXISTS idx_sessions_status ON test_sessions(status);
       CREATE INDEX IF NOT EXISTS idx_questions_active ON questions(isActive);
     `);
 
-    // Ensure resumeData & jobProfile columns exist if SQLite table was created prior
+    // Ensure resumeData & jobProfile & totalQuestions columns exist if SQLite table was created prior
     try {
       sqliteDb.exec('ALTER TABLE candidates ADD COLUMN resumeData TEXT;');
     } catch (e) {
@@ -361,6 +371,16 @@ if (isPostgres) {
     }
     try {
       sqliteDb.exec("ALTER TABLE candidates ADD COLUMN jobProfile TEXT DEFAULT 'Web Development';");
+    } catch (e) {
+      // Ignored if already exists
+    }
+    try {
+      sqliteDb.exec("ALTER TABLE candidates ADD COLUMN totalQuestions INTEGER DEFAULT 30;");
+    } catch (e) {
+      // Ignored if already exists
+    }
+    try {
+      sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_candidates_jobprofile ON candidates(jobProfile);');
     } catch (e) {
       // Ignored if already exists
     }
@@ -373,17 +393,20 @@ if (isPostgres) {
     try {
       const qCount = sqliteDb.prepare('SELECT COUNT(*) as count FROM questions').get();
       if (!qCount || qCount.count < 60) {
-        console.log(`[SQLite] Questions table has ${qCount ? qCount.count : 0} questions. Seeding full 60 questions...`);
+        console.log(`[SQLite] Questions table has ${qCount ? qCount.count : 0} questions. Ensuring full 60 questions...`);
         const { questions } = require('../database/seedQuestions');
+        const checkQ = sqliteDb.prepare('SELECT id FROM questions WHERE question = ?');
         const insertQ = sqliteDb.prepare(`
           INSERT INTO questions (category, question, optionA, optionB, optionC, optionD, correctAnswer, difficulty, isActive)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
         `);
-        sqliteDb.exec('DELETE FROM questions');
         for (const q of questions) {
-          insertQ.run(q.category, q.question, q.optionA, q.optionB, q.optionC, q.optionD, q.correctAnswer, q.difficulty);
+          const exists = checkQ.get(q.question);
+          if (!exists) {
+            insertQ.run(q.category, q.question, q.optionA, q.optionB, q.optionC, q.optionD, q.correctAnswer, q.difficulty);
+          }
         }
-        console.log(`[SQLite] Successfully seeded all ${questions.length} questions.`);
+        console.log(`[SQLite] Successfully ensured all ${questions.length} questions.`);
       }
     } catch (e) {
       console.warn('[SQLite] Auto-seed warning:', e.message);

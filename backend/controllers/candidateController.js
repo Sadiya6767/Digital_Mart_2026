@@ -107,26 +107,65 @@ exports.registerCandidate = async (req, res) => {
     }
 
     // 7. Insert new candidate with selected job profile
-    const result = await db.run(`
-      INSERT INTO candidates (
-        fullName, email, phone, collegeName, degree, branch, graduationYear,
-        jobProfile, resumePath, resumeData, registeredAt, totalQuestions, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 30, 'REGISTERED')
-    `, [
-      fullName.trim(),
-      trimmedEmail,
-      phone.trim(),
-      collegeName.trim(),
-      degree.trim(),
-      branch.trim(),
-      gradYearNum,
-      validProfile,
-      resumePath,
-      resumeData,
-      new Date().toISOString()
-    ]);
+    let candidateId;
+    try {
+      const result = await db.run(`
+        INSERT INTO candidates (
+          fullName, email, phone, collegeName, degree, branch, graduationYear,
+          jobProfile, resumePath, resumeData, registeredAt, totalQuestions, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 30, 'REGISTERED')
+      `, [
+        fullName.trim(),
+        trimmedEmail,
+        phone.trim(),
+        collegeName.trim(),
+        degree.trim(),
+        branch.trim(),
+        gradYearNum,
+        validProfile,
+        resumePath,
+        resumeData,
+        new Date().toISOString()
+      ]);
+      candidateId = Number(result.lastInsertRowid);
+    } catch (insertErr) {
+      console.warn('Initial candidate insert failed, ensuring schema migration:', insertErr.message);
+      // Run fallback migrations on-the-fly
+      try {
+        if (db.isPostgres) {
+          await db.pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS jobProfile TEXT DEFAULT 'Web Development';");
+          await db.pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS totalQuestions INTEGER DEFAULT 30;");
+          await db.pool.query('ALTER TABLE candidates ADD COLUMN IF NOT EXISTS resumeData TEXT;');
+        } else {
+          try { db.sqliteDb.exec("ALTER TABLE candidates ADD COLUMN jobProfile TEXT DEFAULT 'Web Development';"); } catch(e){}
+          try { db.sqliteDb.exec("ALTER TABLE candidates ADD COLUMN totalQuestions INTEGER DEFAULT 30;"); } catch(e){}
+          try { db.sqliteDb.exec("ALTER TABLE candidates ADD COLUMN resumeData TEXT;"); } catch(e){}
+        }
+      } catch (migErr) {
+        console.error('On-the-fly migration error:', migErr.message);
+      }
 
-    const candidateId = Number(result.lastInsertRowid);
+      // Retry insert with guaranteed columns
+      const retryResult = await db.run(`
+        INSERT INTO candidates (
+          fullName, email, phone, collegeName, degree, branch, graduationYear,
+          jobProfile, resumePath, resumeData, registeredAt, totalQuestions, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 30, 'REGISTERED')
+      `, [
+        fullName.trim(),
+        trimmedEmail,
+        phone.trim(),
+        collegeName.trim(),
+        degree.trim(),
+        branch.trim(),
+        gradYearNum,
+        validProfile,
+        resumePath,
+        resumeData,
+        new Date().toISOString()
+      ]);
+      candidateId = Number(retryResult.lastInsertRowid);
+    }
 
     return res.status(201).json({
       success: true,
@@ -141,8 +180,11 @@ exports.registerCandidate = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Registration error:', err);
-    return res.status(500).json({ success: false, message: 'Server error during registration. Please try again.' });
+    console.error('Registration error details:', err.message, err);
+    return res.status(500).json({ 
+      success: false, 
+      message: err.message ? `Registration failed: ${err.message}` : 'Server error during registration. Please try again.' 
+    });
   }
 };
 
