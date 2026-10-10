@@ -6,8 +6,8 @@ import Modal from '../components/Modal';
 import TabWarningModal from '../components/TabWarningModal';
 import { api } from '../services/api';
 
-const SECONDS_PER_QUESTION = 60;
-const TOTAL_QUESTION_TIME_MS = 60000;
+const SECONDS_PER_QUESTION = 40;
+const TOTAL_QUESTION_TIME_MS = 40000;
 
 export default function TestPage() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export default function TestPage() {
 
   const [loading, setLoading] = useState(true);
   const [currentNumber, setCurrentNumber] = useState(1);
-  const [totalQuestions, setTotalQuestions] = useState(30);
+  const [totalQuestions, setTotalQuestions] = useState(50);
   const [questionData, setQuestionData] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -28,12 +28,11 @@ export default function TestPage() {
   const [overallRemainingSec, setOverallRemainingSec] = useState(30 * 60);
   const overallTimerRef = useRef(null);
 
-  // 60-Second running line timer per question
+  // 40-Second running line timer per question
   const [timeLeftMs, setTimeLeftMs] = useState(TOTAL_QUESTION_TIME_MS);
   const questionTimerRef = useRef(null);
 
-  // Fullscreen & Anti-Cheat State
-  const [isFullscreen, setIsFullscreen] = useState(true);
+  // Anti-Cheat State
   const [strikeCount, setStrikeCount] = useState(0);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showTabWarning, setShowTabWarning] = useState(false);
@@ -46,7 +45,7 @@ export default function TestPage() {
   const currentNumberRef = useRef(1);
   currentNumberRef.current = currentNumber;
 
-  const totalQuestionsRef = useRef(30);
+  const totalQuestionsRef = useRef(50);
   totalQuestionsRef.current = totalQuestions;
 
   const strikeCountRef = useRef(0);
@@ -257,7 +256,7 @@ export default function TestPage() {
 
       const qNum = res.currentQuestion || 1;
       setCurrentNumber(qNum);
-      const total = res.totalQuestions || 30;
+      const total = res.totalQuestions || 50;
       setTotalQuestions(total);
       totalQuestionsRef.current = total;
 
@@ -502,40 +501,6 @@ export default function TestPage() {
       <Header />
 
       <div className="page-container">
-        {/* Fullscreen Overlay Prompt if Exited */}
-        {!isFullscreen && (
-          <div style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.94)',
-            backdropFilter: 'blur(10px)',
-            zIndex: 99999,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            textAlign: 'center'
-          }}>
-            <ShieldAlert size={56} color="#ef4444" style={{ marginBottom: '16px' }} />
-            <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '800', marginBottom: '8px' }}>
-              Fullscreen Mode Required
-            </h2>
-            <p style={{ color: '#cbd5e1', maxWidth: '440px', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '24px' }}>
-              This is a proctored assessment. You must remain in fullscreen mode. Exiting fullscreen is recorded as an anti-cheating violation strike.
-            </p>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={requestFullscreenMode}
-              style={{ fontSize: '1rem', padding: '12px 28px', display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-              <Maximize2 size={18} />
-              <span>Re-enter Fullscreen to Continue</span>
-            </button>
-          </div>
-        )}
-
         <div 
           className="content-card question-card"
           style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none' }}
@@ -598,12 +563,12 @@ export default function TestPage() {
             />
           </div>
 
-          {/* 60-Second Running Question Timer Line */}
+          {/* 40-Second Running Question Timer Line */}
           <div className="question-timer-wrapper" style={{ marginTop: '16px' }}>
             <div className="question-timer-top">
               <div className="question-timer-label">
                 <Clock size={15} />
-                <span>Question Time (60s limit)</span>
+                <span>Question Time (40s limit)</span>
               </div>
               <div className={`question-timer-badge ${timerBadgeClass}`}>
                 {remainingSec}s

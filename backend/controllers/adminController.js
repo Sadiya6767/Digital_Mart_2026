@@ -458,7 +458,7 @@ exports.exportCandidatesCSV = async (req, res) => {
       c.graduationYear || c.graduationyear || '',
       c.status || '',
       c.score ?? 0,
-      c.totalQuestions || c.totalquestions || 30,
+      c.totalQuestions || c.totalquestions || 50,
       `"${c.percentage || 0}%"`,
       `"${c.registeredAt || c.registeredat || ''}"`,
       `"${c.testStartedAt || c.teststartedat || ''}"`,

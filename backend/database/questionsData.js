@@ -300,6 +300,206 @@ module.exports = [
     "difficulty": "ADVANCED"
   },
   {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In React, why is using the array index as a component \"key\" considered an anti-pattern when rendering dynamic, reorderable lists?",
+    "optionA": "It triggers a compilation syntax error in modern Babel / JSX transpilers",
+    "optionB": "It can cause component state bugs and incorrect UI rendering because React uses keys to match virtual DOM instances across re-renders",
+    "optionC": "It disables browser caching for all subsequent API requests",
+    "optionD": "Array indices take up more GPU memory than unique UUID string keys",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In TypeScript, what is the role of the \"keyof\" type operator?",
+    "optionA": "It generates a cryptographic public key for database encryption",
+    "optionB": "It produces a string or numeric literal union of the known, public property names of an object type",
+    "optionC": "It deletes all undefined properties from a JSON object at runtime",
+    "optionD": "It forces a variable to be passed strictly by reference in JavaScript",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "During browser rendering, which of the following CSS property changes triggers only the \"Composite\" stage without causing \"Layout (Reflow)\" or \"Paint\"?",
+    "optionA": "width and height",
+    "optionB": "transform and opacity",
+    "optionC": "padding and margin",
+    "optionD": "border-width and color",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In Node.js backend applications, which scenario is most commonly responsible for insidious memory leaks?",
+    "optionA": "Using async/await instead of native callback functions",
+    "optionB": "Accumulating uncleaned EventEmitters, unevicted global cache maps, or unclosed socket connections",
+    "optionC": "Compressing outgoing HTTP response payloads using gzip",
+    "optionD": "Defining arrow functions inside class methods",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "When architecting a real-time system, what is a primary structural advantage of Server-Sent Events (SSE) over WebSockets for one-way live notifications?",
+    "optionA": "SSE operates over standard HTTP/HTTPS with automatic reconnection and HTTP/2 multiplexing, without requiring full-duplex protocol switching",
+    "optionB": "SSE allows binary peer-to-peer audio streaming directly through UDP",
+    "optionC": "WebSockets cannot be encrypted with TLS/SSL certificates",
+    "optionD": "SSE works exclusively without any server-side running process",
+    "correctAnswer": "A",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "What is the primary security objective of implementing a strict \"Content Security Policy (CSP)\" HTTP header?",
+    "optionA": "To encrypt SQL database tables at rest",
+    "optionB": "To restrict where scripts, styles, and other resources can be loaded from, mitigating Cross-Site Scripting (XSS) and data injection attacks",
+    "optionC": "To prevent DDoS attacks by capping TCP packet sizes",
+    "optionD": "To automatically generate SSL certificates for subdomain routing",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In relational database indexing (e.g., PostgreSQL / MySQL), what does the \"Leftmost Prefix Rule\" dictate for a composite index on columns (A, B, C)?",
+    "optionA": "The database query must sort alphabetically in reverse order",
+    "optionB": "Queries can utilize the index if they filter on (A), (A, B), or (A, B, C), but cannot use it effectively if they only filter on (B) or (C) alone",
+    "optionC": "Column C must always have higher numerical cardinality than column A",
+    "optionD": "The index is only valid when reading data from left-to-right disk partitions",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In Progressive Web Apps (PWA), which Service Worker caching strategy returns cached assets immediately for speed while asynchronously fetching fresh versions to update cache?",
+    "optionA": "Network-Only",
+    "optionB": "Stale-While-Revalidate",
+    "optionC": "Cache-Only",
+    "optionD": "Offline-Reject",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In modern JavaScript, what is the key characteristic of a \"WeakMap\" compared to a standard \"Map\"?",
+    "optionA": "WeakMap keys must be objects and are held weakly, allowing them to be garbage collected if no other references exist",
+    "optionB": "WeakMap has higher throughput when serialized into XML strings",
+    "optionC": "WeakMap stores values in browser localStorage automatically across sessions",
+    "optionD": "WeakMap keys can only be booleans or 32-bit floats",
+    "correctAnswer": "A",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In Next.js, what does Incremental Static Regeneration (ISR) allow developers to achieve?",
+    "optionA": "Convert all React components into pure WebAssembly binaries at runtime",
+    "optionB": "Update static pages in the background after deployment without needing a full site rebuild",
+    "optionC": "Bypass CORS headers on third-party tracking scripts",
+    "optionD": "Force client browsers to reload every asset on every mouse movement",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "Why are parameterized queries (prepared statements) the standard industry defense against SQL Injection?",
+    "optionA": "They convert all database tables into read-only files before query execution",
+    "optionB": "They separate SQL code logic from user-provided data parameters, ensuring user inputs are treated strictly as literal values rather than executable code",
+    "optionC": "They run queries on a sandbox client machine rather than the production database",
+    "optionD": "They remove all vowels from incoming input strings",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "What is the technical operational difference between \"Debounce\" and \"Throttle\" in client-side event handling?",
+    "optionA": "Debounce runs the function continuously at 60 FPS, while Throttle pauses the main thread",
+    "optionB": "Debounce delays execution until a specified quiet period has elapsed with no new events, while Throttle guarantees execution at most once per fixed time interval",
+    "optionC": "Debounce works only on mobile touch screens, while Throttle works only on desktops",
+    "optionD": "Throttle deletes event listeners, while Debounce registers duplicate listeners",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In CSS layout mechanics, what creates a new \"Block Formatting Context (BFC)\" and prevents vertical margin collapsing between parent and child?",
+    "optionA": "Setting display: inline",
+    "optionB": "Setting overflow: hidden (or auto), display: flow-root, or display: flex",
+    "optionC": "Setting margin: auto without declaring a width",
+    "optionD": "Using font-weight: bold",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "When does a web browser trigger a CORS \"Preflight\" (OPTIONS) request prior to making an HTTP API call?",
+    "optionA": "Whenever the request uses GET with standard text/plain Content-Type",
+    "optionB": "Whenever the cross-origin request uses non-simple HTTP methods (e.g., PUT, DELETE, PATCH) or custom headers (e.g., Authorization)",
+    "optionC": "Whenever the web page is opened in an incognito window",
+    "optionD": "Only when the user's internet speed is below 1 Mbps",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In Docker containerization for full-stack Node.js applications, what is the main benefit of using \"Multi-Stage Builds\"?",
+    "optionA": "It enables containers to run on multiple cloud operating systems simultaneously",
+    "optionB": "It separates build dependencies and compiler toolchains from the final runtime image, resulting in dramatically smaller and more secure production containers",
+    "optionC": "It eliminates the need for an application database server",
+    "optionD": "It speeds up client internet connections via HTTP/3 tunneling",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "When handling user authentication tokens, why should sensitive Refresh Tokens be stored in \"HttpOnly, Secure, SameSite=Strict\" cookies instead of browser localStorage?",
+    "optionA": "Because cookies take less disk space than localStorage on iOS devices",
+    "optionB": "Because HttpOnly cookies cannot be accessed or stolen by malicious JavaScript running in the browser during a Cross-Site Scripting (XSS) attack",
+    "optionC": "Because localStorage cannot hold strings longer than 25 characters",
+    "optionD": "Because HttpOnly cookies bypass standard HTTPS encryption",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "Why is \"Tree-Shaking\" (dead-code elimination) more effective with ES Modules (import/export) than CommonJS (require/module.exports)?",
+    "optionA": "Because CommonJS modules can only be bundled on Linux servers",
+    "optionB": "Because ES Modules have static module structure that can be deterministically analyzed at build time before code execution",
+    "optionC": "Because ES Modules automatically convert JavaScript to C++",
+    "optionD": "Because CommonJS syntax does not support function declarations",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In Google Core Web Vitals (CWV), what metric replaced First Input Delay (FID) to assess overall page responsiveness throughout the entire session lifecycle?",
+    "optionA": "Largest Contentful Paint (LCP)",
+    "optionB": "Interaction to Next Paint (INP)",
+    "optionC": "Cumulative Layout Shift (CLS)",
+    "optionD": "Time to First Byte (TTFB)",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "What core architectural advantage does GraphQL provide over traditional REST API endpoints for complex dashboard interfaces?",
+    "optionA": "GraphQL eliminates the need for database servers and backend logic",
+    "optionB": "Clients can request exactly the data fields they require in a single query roundtrip, eliminating both over-fetching and under-fetching",
+    "optionC": "GraphQL transmits uncompressed binary packets over Bluetooth",
+    "optionD": "GraphQL cannot return JSON responses",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "WEB_DEVELOPMENT",
+    "question": "In modern responsive design, how do CSS \"Container Queries\" (@container) differ fundamentally from traditional \"Media Queries\" (@media)?",
+    "optionA": "Container queries apply styles based on the dimensions of a parent element container rather than the overall browser viewport width",
+    "optionB": "Container queries only work inside Docker containers",
+    "optionC": "Media queries can only be written in external JavaScript files",
+    "optionD": "Container queries require WebGL hardware acceleration to render",
+    "correctAnswer": "A",
+    "difficulty": "ADVANCED"
+  },
+  {
     "category": "BUSINESS_DEVELOPMENT",
     "question": "In enterprise B2B sales qualification, what does the \"BANT\" framework stand for, and when is it applied?",
     "optionA": "Brand, Audience, Network, Technology - used during website redesign",
@@ -596,6 +796,206 @@ module.exports = [
     "optionB": "Transactional reps wear formal suits, while Strategic Partners wear casual t-shirts",
     "optionC": "Transactional reps only speak over telephone, while Strategic Partners communicate only via postal mail",
     "optionD": "There is no distinction; both operate identically in all markets",
+    "correctAnswer": "A",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "In enterprise sales methodology, what does the \"MEDDPICC\" framework evaluate to qualify high-value deals?",
+    "optionA": "Metrics, Economic Buyer, Decision Criteria, Decision Process, Paper Process, Identify Pain, Champion, Competition",
+    "optionB": "Marketing, Equity, Dividends, Depreciation, Profit, Income, Cashflow, Credit",
+    "optionC": "Management, Employees, Delegation, Performance, Payroll, Incentives, Compliance, Culture",
+    "optionD": "Media, Engagement, Digital, Production, Presentation, Interaction, Content, Conversion",
+    "correctAnswer": "A",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "In SaaS sales economics, what does the \"CAC Payback Period\" measure?",
+    "optionA": "The number of hours taken for an SDR to dial 100 leads",
+    "optionB": "The number of months required for gross profit generated by a new customer to equal the cost incurred to acquire that customer",
+    "optionC": "The annual bonus payout percentage awarded to the top account executive",
+    "optionD": "The time taken by accounts receivable to print paper invoices",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "Why is a Net Revenue Retention (NRR) rate exceeding 100% considered the holy grail of SaaS and agency business development?",
+    "optionA": "It means that the company has terminated all of its marketing expenses",
+    "optionB": "It indicates that revenue expansion and upsells from existing clients outweigh revenue lost to churn and downgrades, enabling organic growth even without new customer acquisitions",
+    "optionC": "It guarantees that no client will ever request customer support",
+    "optionD": "It indicates that the company is legally exempt from corporate taxation",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "When building an outbound B2B email sequence, which practice consistently yields the highest response and meeting-booked rates?",
+    "optionA": "Sending identical generic mass blasts to 50,000 unverified email addresses without personalization",
+    "optionB": "Using concise, hyper-relevant pain-point messaging tailored to the prospect's industry/role with a low-friction call-to-action (e.g. asking for interest rather than demanding a 45-min calendar slot)",
+    "optionC": "Attaching a 50MB PDF brochure and video file directly to the very first cold email",
+    "optionD": "Writing all email subject lines in full capital letters with multiple exclamation marks",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "In formal procurement processes, what is the primary distinction between an \"RFI\" (Request for Information) and an \"RFP\" (Request for Proposal)?",
+    "optionA": "An RFI is a binding legal contract, while an RFP is an informal text message",
+    "optionB": "An RFI is an exploratory document used by buyers to gather market intelligence and vendor capabilities, whereas an RFP is a formal competitive bidding document requesting specific solutions, pricing, and SLAs",
+    "optionC": "An RFI is exclusively used for government defense contracts, while RFPs are used only by non-profit charities",
+    "optionD": "RFIs are issued after deals close, whereas RFPs are issued before prospecting begins",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "What is the primary risk of an inadequate handover between the Business Development / Sales team and the Customer Success / Delivery team after closing a deal?",
+    "optionA": "Customer data will be automatically erased from the CRM",
+    "optionB": "Misaligned expectations, delivery delays, client buyer remorse, and high churn risk within the first 90 days",
+    "optionC": "The sales rep will be barred from selling to other prospects forever",
+    "optionD": "The client will be unable to make bank wire transfers",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "What is the key strategic benefit of offering a \"Tiered Pricing Model\" (e.g., Starter, Professional, Enterprise) over a single flat-rate price?",
+    "optionA": "It reduces the amount of code the software engineers have to write",
+    "optionB": "It captures maximum consumer surplus by allowing customers of varying sizes and budgets to self-select the package that matches their value requirements and willingness to pay",
+    "optionC": "It eliminates the need for accounting audits and sales invoices",
+    "optionD": "It prevents competitors from seeing your company's product features",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "In modern social selling on LinkedIn, which strategy most effectively positions a BDE to connect with C-level enterprise decision makers?",
+    "optionA": "Sending immediate generic copy-paste sales pitches within 30 seconds of an accepted connection request",
+    "optionB": "Sharing credible industry insights, engaging thoughtfully with the executive's public commentary, and establishing mutual peer credibility before initiating a consultative outreach",
+    "optionC": "Tagging 50 executives randomly in promotional product images",
+    "optionD": "Automating 500 connection requests per day with zero profile information",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "When a prospect objects with: \"We are already very happy with our current vendor/agency\", what is the most consultative response strategy?",
+    "optionA": "Aggressively criticize the competitor's leadership and call their product useless",
+    "optionB": "Acknowledge their relationship positively, inquire about their future roadmap priorities, and explore whether there are secondary gaps or niche areas where your solution could complement their current setup",
+    "optionC": "Immediately cut your price in half and beg them to switch today",
+    "optionD": "Hang up the phone immediately and blacklist the company in the CRM",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "In sales management, what are the four key variables that determine \"Sales Pipeline Velocity\" (V = Number of Ops * Win Rate * Average Deal Size / Cycle Time)?",
+    "optionA": "Headcount, Office Rent, Marketing Spend, Employee Turnover",
+    "optionB": "Number of Qualified Opportunities, Win Rate percentage, Average Deal Value, and Sales Cycle Length in days",
+    "optionC": "Social Media Followers, Website Clicks, Impressions, and Page Views",
+    "optionD": "Server Costs, Database Latency, Bug Count, and Sprint Velocity",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "Why is \"Multi-Threading\" considered an essential risk mitigation strategy in high-stakes enterprise sales deals?",
+    "optionA": "It allows sales reps to execute multiple computer programs on multi-core processors simultaneously",
+    "optionB": "It builds relationships across multiple departments and decision makers (e.g., technical, financial, end-user), preventing the deal from stalling or dying if a single internal champion departs",
+    "optionC": "It automatically reduces product manufacturing costs by 50%",
+    "optionD": "It bypasses all corporate legal and procurement review requirements",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "During a first-round Discovery Call with a prospective client, what should be the primary objective of a top-performing BDE?",
+    "optionA": "Spend 45 minutes walking through every feature slide in the corporate pitch deck without pausing",
+    "optionB": "Ask insightful, open-ended questions to uncover the prospect's core operational bottlenecks, business consequences of inaction, and strategic priorities",
+    "optionC": "Press the prospect to sign an annual contract before ending the call",
+    "optionD": "Offer maximum discounts before understanding their actual requirements",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "What is the primary advantage of establishing a \"Channel Partner / Reseller Ecosystem\" alongside a direct sales team?",
+    "optionA": "Channel partners work for zero commission and assume full product liability",
+    "optionB": "It accelerates market reach and distribution by leveraging the trusted existing relationships, local presence, and customer bases of established partners without proportional sales headcount increase",
+    "optionC": "It eliminates the need to maintain quality control or customer documentation",
+    "optionD": "It converts all enterprise software products into consumer retail merchandise",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "When negotiating enterprise software or agency contracts, why must a BDE understand the difference between Gross Margin and Operating Margin?",
+    "optionA": "Because gross margin measures revenue minus direct service delivery costs, ensuring custom discount requests do not render individual client accounts unprofitable to service",
+    "optionB": "Because operating margin only applies to non-profit entities",
+    "optionC": "Because gross margin is determined exclusively by the central bank interest rate",
+    "optionD": "Because commercial sales reps are legally forbidden from discussing profit margins",
+    "correctAnswer": "A",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "If a prospect on a preliminary cold phone call asks: \"Can you just email me your pricing deck?\", what is the most effective way to maintain momentum?",
+    "optionA": "Refuse rudely and demand their credit card number immediately",
+    "optionB": "Share a concise ballpark range or explain that pricing depends directly on scope/scale, then offer a quick 10-minute diagnostic discussion to provide a tailored, accurate quote",
+    "optionC": "Email them a 200-page spreadsheet without any explanation and never follow up",
+    "optionD": "Promise that your service is completely free of charge forever",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "In growth-stage business models, what is the widely accepted benchmark for a healthy Customer Lifetime Value to Customer Acquisition Cost (LTV:CAC) ratio?",
+    "optionA": "0.5 : 1 (Spending twice as much on CAC as the customer will ever spend)",
+    "optionB": "At least 3 : 1 (The lifetime value generated is at least three times the acquisition cost)",
+    "optionC": "100 : 1 (Requiring zero investment into sales or marketing operations)",
+    "optionD": "Negative 1 : 1",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "In Account-Based Marketing (ABM), how do Business Development and Marketing teams align their efforts?",
+    "optionA": "Marketing only posts memes on social media while sales ignores marketing completely",
+    "optionB": "Both teams collaboratively identify a high-value list of specific target accounts, orchestrating personalized outreach, tailored content, and multi-channel touches toward key stakeholders within those exact accounts",
+    "optionC": "Sales reps spend their entire working day designing display banner advertisements",
+    "optionD": "Marketing takes over customer billing and collections directly",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "On Strategyzer's Value Proposition Canvas, what two components must achieve \"Problem-Solution Fit\"?",
+    "optionA": "Office Location and Company Logo",
+    "optionB": "The Customer Profile (Customer Jobs, Pains, Gains) and the Value Map (Products/Services, Pain Relievers, Gain Creators)",
+    "optionC": "Stock Market Ticker and Dividend Yield",
+    "optionD": "Employee Salaries and Annual Vacation Allowances",
+    "correctAnswer": "B",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "What is a \"Mutual Action Plan (MAP)\" (or Joint Execution Plan), and why does it improve enterprise close rates?",
+    "optionA": "A shared collaborative document that outlines every agreed milestone, owner, and deadline between buyer and seller from evaluation to contract sign-off and go-live, ensuring momentum and transparency",
+    "optionB": "A secret internal document hidden from the client to enforce sudden surprise fees",
+    "optionC": "An automated script that sends 10 reminder emails per minute to the buyer",
+    "optionD": "A document that transfers company equity to the prospective client",
+    "correctAnswer": "A",
+    "difficulty": "ADVANCED"
+  },
+  {
+    "category": "BUSINESS_DEVELOPMENT",
+    "question": "What is the strategic difference between \"Up-Selling\" and \"Cross-Selling\" in account expansion?",
+    "optionA": "Up-selling encourages the client to purchase a higher-tier or premium version of the current product, while Cross-selling offers complementary or adjacent products/services that solve related needs",
+    "optionB": "Up-selling is strictly illegal under commercial law, whereas Cross-selling is mandatory",
+    "optionC": "Cross-selling only applies to physical grocery items, while Up-selling only applies to real estate",
+    "optionD": "There is no difference; they are identical synonyms with no distinction",
     "correctAnswer": "A",
     "difficulty": "ADVANCED"
   }

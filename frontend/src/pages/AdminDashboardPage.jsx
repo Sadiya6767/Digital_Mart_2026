@@ -396,7 +396,7 @@ export default function AdminDashboardPage() {
 
           <div className="stat-card">
             <span className="stat-label">Average Score</span>
-            <span className="stat-value" style={{ color: '#1d4ed8' }}>{stats.avgScore} <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#64748b' }}>/ 30</span></span>
+            <span className="stat-value" style={{ color: '#1d4ed8' }}>{stats.avgScore} <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#64748b' }}>/ 50</span></span>
           </div>
         </div>
 
@@ -565,7 +565,7 @@ export default function AdminDashboardPage() {
                     </td>
                     <td>
                       <div style={{ fontWeight: '800', color: '#1d4ed8', fontSize: '1rem' }}>
-                        {c.status === 'COMPLETED' || c.status === 'AUTO_SUBMITTED' ? `${c.score} / ${c.totalQuestions || c.totalquestions || 30}` : '-'}
+                        {c.status === 'COMPLETED' || c.status === 'AUTO_SUBMITTED' ? `${c.score} / ${c.totalQuestions || c.totalquestions || 50}` : '-'}
                       </div>
                     </td>
                     <td>

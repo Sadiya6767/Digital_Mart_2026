@@ -150,7 +150,7 @@ if (isPostgres) {
           testStartedAt TEXT,
           testSubmittedAt TEXT,
           score INTEGER DEFAULT 0,
-          totalQuestions INTEGER DEFAULT 30,
+          totalQuestions INTEGER DEFAULT 50,
           percentage REAL DEFAULT 0.0,
           status TEXT DEFAULT 'REGISTERED'
         );
@@ -207,7 +207,7 @@ if (isPostgres) {
         // Ignored
       }
       try {
-        await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS totalQuestions INTEGER DEFAULT 30;");
+        await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS totalQuestions INTEGER DEFAULT 50;");
       } catch (e) {
         // Ignored
       }
@@ -280,7 +280,7 @@ if (isPostgres) {
         await pool.query('UPDATE questions SET isActive = 0 WHERE NOT (question = ANY($1))', [questionTexts]);
       }).catch(() => {});
 
-      console.log(`[Neon Postgres] Successfully verified and updated questions bank to 60 advance questions.`);
+      console.log(`[Neon Postgres] Successfully verified and updated questions bank to 100 advance questions.`);
 
       console.log('[Neon Postgres] Connected and verified successfully.');
     } catch (err) {
@@ -338,7 +338,7 @@ if (isPostgres) {
         testStartedAt TEXT,
         testSubmittedAt TEXT,
         score INTEGER DEFAULT 0,
-        totalQuestions INTEGER DEFAULT 30,
+        totalQuestions INTEGER DEFAULT 50,
         percentage REAL DEFAULT 0.0,
         status TEXT DEFAULT 'REGISTERED'
       );
@@ -398,7 +398,7 @@ if (isPostgres) {
       // Ignored if already exists
     }
     try {
-      sqliteDb.exec("ALTER TABLE candidates ADD COLUMN totalQuestions INTEGER DEFAULT 30;");
+      sqliteDb.exec("ALTER TABLE candidates ADD COLUMN totalQuestions INTEGER DEFAULT 50;");
     } catch (e) {
       // Ignored if already exists
     }
@@ -427,7 +427,7 @@ if (isPostgres) {
     insertSetting.run('SHOW_STUDENT_SCORE', config.SHOW_STUDENT_SCORE ? 'true' : 'false');
     insertSetting.run('ENABLE_TAB_WARNING', config.ENABLE_TAB_WARNING ? 'true' : 'false');
 
-    // Ensure full 60 questions from seedQuestions
+    // Ensure full 100 questions from seedQuestions
     try {
       const questions = require('../database/questionsData');
       const checkQ = sqliteDb.prepare('SELECT id FROM questions WHERE question = ?');
@@ -451,7 +451,7 @@ if (isPostgres) {
       const questionTexts = questions.map(q => q.question);
       sqliteDb.prepare(`UPDATE questions SET isActive = 0 WHERE question NOT IN (${placeholders})`).run(...questionTexts);
 
-      console.log(`[SQLite] Successfully synced questions bank to 60 advance questions.`);
+      console.log(`[SQLite] Successfully synced questions bank to 100 advance questions.`);
     } catch (e) {
       console.warn('[SQLite] Questions sync warning:', e.message);
     }

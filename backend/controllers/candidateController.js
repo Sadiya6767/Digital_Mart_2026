@@ -113,7 +113,7 @@ exports.registerCandidate = async (req, res) => {
         INSERT INTO candidates (
           fullName, email, phone, collegeName, degree, branch, graduationYear,
           jobProfile, resumePath, resumeData, registeredAt, totalQuestions, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 30, 'REGISTERED')
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 50, 'REGISTERED')
       `, [
         fullName.trim(),
         trimmedEmail,
@@ -134,11 +134,11 @@ exports.registerCandidate = async (req, res) => {
       try {
         if (db.isPostgres) {
           await db.pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS jobProfile TEXT DEFAULT 'Web Development';");
-          await db.pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS totalQuestions INTEGER DEFAULT 30;");
+          await db.pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS totalQuestions INTEGER DEFAULT 50;");
           await db.pool.query('ALTER TABLE candidates ADD COLUMN IF NOT EXISTS resumeData TEXT;');
         } else {
           try { db.sqliteDb.exec("ALTER TABLE candidates ADD COLUMN jobProfile TEXT DEFAULT 'Web Development';"); } catch(e){}
-          try { db.sqliteDb.exec("ALTER TABLE candidates ADD COLUMN totalQuestions INTEGER DEFAULT 30;"); } catch(e){}
+          try { db.sqliteDb.exec("ALTER TABLE candidates ADD COLUMN totalQuestions INTEGER DEFAULT 50;"); } catch(e){}
           try { db.sqliteDb.exec("ALTER TABLE candidates ADD COLUMN resumeData TEXT;"); } catch(e){}
         }
       } catch (migErr) {
@@ -150,7 +150,7 @@ exports.registerCandidate = async (req, res) => {
         INSERT INTO candidates (
           fullName, email, phone, collegeName, degree, branch, graduationYear,
           jobProfile, resumePath, resumeData, registeredAt, totalQuestions, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 30, 'REGISTERED')
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 50, 'REGISTERED')
       `, [
         fullName.trim(),
         trimmedEmail,

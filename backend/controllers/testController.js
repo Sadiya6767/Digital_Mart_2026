@@ -7,7 +7,7 @@ let lastCacheTime = 0;
 
 async function getCachedQuestions() {
   const now = Date.now();
-  if (cachedQuestions && cachedQuestions.length >= 60 && (now - lastCacheTime < 10 * 60 * 1000)) {
+  if (cachedQuestions && cachedQuestions.length >= 100 && (now - lastCacheTime < 10 * 60 * 1000)) {
     return cachedQuestions;
   }
   const all = await db.all('SELECT * FROM questions WHERE isActive = 1');
@@ -37,7 +37,7 @@ async function autoSubmitTest(candidateId, reason = null) {
   const score = Number(scoreRow?.correctCount || scoreRow?.correctcount || 0);
 
   const cand = await db.get('SELECT totalQuestions, totalquestions FROM candidates WHERE id = ?', [candidateId]);
-  const total = Number(cand?.totalQuestions || cand?.totalquestions || 30);
+  const total = Number(cand?.totalQuestions || cand?.totalquestions || 50);
   const percentage = Math.round((score / total) * 100 * 100) / 100;
 
   // Update candidate
@@ -95,7 +95,7 @@ exports.startTest = async (req, res) => {
       const candName = candidate.fullName || candidate.fullname || 'Candidate';
       const candProfile = candidate.jobProfile || candidate.jobprofile || 'Web Development';
 
-      let totalQ = Number(candidate.totalQuestions || candidate.totalquestions || 30);
+      let totalQ = Number(candidate.totalQuestions || candidate.totalquestions || 50);
       try {
         const qOrder = JSON.parse(existingSession.questionOrder || existingSession.questionorder);
         if (qOrder && qOrder.length) totalQ = qOrder.length;
@@ -134,11 +134,11 @@ exports.startTest = async (req, res) => {
     // New Session Creation for Candidate
     // 1. Fetch questions from ultra-fast cache
     const allQuestions = await getCachedQuestions();
-    if (allQuestions.length < 30) {
+    if (allQuestions.length < 50) {
       return res.status(500).json({ success: false, message: 'Insufficient questions in the assessment bank.' });
     }
 
-    // 2. Filter questions strictly according to candidate's chosen jobProfile (30 questions each)
+    // 2. Filter questions strictly according to candidate's chosen jobProfile (50 questions each)
     const candProfile = candidate.jobProfile || candidate.jobprofile || 'Web Development';
     const targetCategory = (candProfile === 'Business Development Executive')
       ? 'BUSINESS_DEVELOPMENT'
@@ -146,15 +146,15 @@ exports.startTest = async (req, res) => {
 
     const profileQuestions = allQuestions.filter(q => (q.category || '').toUpperCase() === targetCategory);
 
-    if (profileQuestions.length < 30) {
+    if (profileQuestions.length < 50) {
       return res.status(500).json({
         success: false,
-        message: `Insufficient questions in the assessment bank for ${candProfile}. Required 30, found ${profileQuestions.length}.`
+        message: `Insufficient questions in the assessment bank for ${candProfile}. Required 50, found ${profileQuestions.length}.`
       });
     }
 
-    // Cryptographically shuffle and pick all 30 profile-specific questions uniquely for this candidate
-    const candidateQuestions = shuffleArray(profileQuestions).slice(0, 30);
+    // Cryptographically shuffle and pick all 50 profile-specific questions uniquely for this candidate
+    const candidateQuestions = shuffleArray(profileQuestions).slice(0, 50);
     const questionOrder = candidateQuestions.map(q => q.id);
 
     // 3. Shuffle options for each question uniquely and store mapping
@@ -242,7 +242,7 @@ exports.getSession = async (req, res) => {
     const candName = candidate.fullName || candidate.fullname || 'Candidate';
     const candProfile = candidate.jobProfile || candidate.jobprofile || 'Web Development';
 
-    let totalQ = Number(candidate.totalQuestions || candidate.totalquestions || 30);
+    let totalQ = Number(candidate.totalQuestions || candidate.totalquestions || 50);
     try {
       const qOrder = JSON.parse(session.questionOrder || session.questionorder);
       if (qOrder && qOrder.length) totalQ = qOrder.length;
@@ -540,7 +540,7 @@ exports.submitTest = async (req, res) => {
     const scoreRow = await db.get('SELECT COUNT(*) as correctCount FROM answers WHERE candidateId = ? AND isCorrect = 1', [candidateId]);
     const score = Number(scoreRow?.correctCount || scoreRow?.correctcount || 0);
 
-    let total = Number(candidate.totalQuestions || candidate.totalquestions || 30);
+    let total = Number(candidate.totalQuestions || candidate.totalquestions || 50);
     const session = await db.get('SELECT questionOrder, questionorder FROM test_sessions WHERE candidateId = ?', [candidateId]);
     if (session) {
       try {

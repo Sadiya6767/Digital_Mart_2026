@@ -4,7 +4,7 @@ const config = require('../config/config');
 const questions = require('./questionsData');
 
 async function seed() {
-  console.log('--- Initializing Advanced Question Bank Seeding (60 Questions) ---');
+  console.log('--- Initializing Advanced Question Bank Seeding (100 Questions) ---');
   let inserted = 0;
   for (const q of questions) {
     const exists = await db.get('SELECT id FROM questions WHERE question = ?', [q.question]);
