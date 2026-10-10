@@ -28,8 +28,8 @@ function shuffleArray(array) {
   return arr;
 }
 
-// Helper to auto submit an expired test
-async function autoSubmitTest(candidateId) {
+// Helper to auto submit an expired or violated test
+async function autoSubmitTest(candidateId, reason = null) {
   const now = new Date().toISOString();
   
   // Calculate score
@@ -41,11 +41,19 @@ async function autoSubmitTest(candidateId) {
   const percentage = Math.round((score / total) * 100 * 100) / 100;
 
   // Update candidate
-  await db.run(`
-    UPDATE candidates 
-    SET status = 'AUTO_SUBMITTED', testSubmittedAt = ?, score = ?, percentage = ?
-    WHERE id = ?
-  `, [now, score, percentage, candidateId]);
+  if (reason) {
+    await db.run(`
+      UPDATE candidates 
+      SET status = 'AUTO_SUBMITTED', testSubmittedAt = ?, score = ?, percentage = ?, violationReason = ?
+      WHERE id = ?
+    `, [now, score, percentage, reason, candidateId]);
+  } else {
+    await db.run(`
+      UPDATE candidates 
+      SET status = 'AUTO_SUBMITTED', testSubmittedAt = ?, score = ?, percentage = ?
+      WHERE id = ?
+    `, [now, score, percentage, candidateId]);
+  }
 
   // Update session
   await db.run(`
@@ -54,7 +62,7 @@ async function autoSubmitTest(candidateId) {
     WHERE candidateId = ?
   `, [candidateId]);
 
-  return { score, percentage, status: 'AUTO_SUBMITTED', submittedAt: now };
+  return { score, percentage, status: 'AUTO_SUBMITTED', submittedAt: now, violationReason: reason };
 }
 
 exports.startTest = async (req, res) => {
@@ -170,9 +178,9 @@ exports.startTest = async (req, res) => {
       };
     }
 
-    // 4. Set duration: 15 minutes (30 questions x 15s = 7.5 mins + 7.5 mins buffer)
+    // 4. Set duration: 30 minutes (1800 seconds)
     const startTime = new Date();
-    const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
+    const endTime = new Date(startTime.getTime() + 30 * 60 * 1000);
 
     await db.run(`
       INSERT INTO test_sessions (
@@ -203,7 +211,7 @@ exports.startTest = async (req, res) => {
         jobProfile: candProfile,
         currentQuestion: 1,
         totalQuestions: candidateQuestions.length,
-        remainingSeconds: 15 * 60,
+        remainingSeconds: 30 * 60,
         status: 'IN_PROGRESS',
         endTime: endTime.toISOString()
       }
@@ -241,7 +249,7 @@ exports.getSession = async (req, res) => {
     } catch (e) {}
 
     const now = new Date();
-    const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 15 * 60 * 1000);
+    const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 30 * 60 * 1000);
     const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
 
     if (remainingSeconds <= 0 && sessionStatus === 'IN_PROGRESS') {
@@ -291,7 +299,7 @@ exports.getQuestion = async (req, res) => {
 
     // Check timer
     const now = new Date();
-    const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 15 * 60 * 1000);
+    const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 30 * 60 * 1000);
     const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
 
     if (remainingSeconds <= 0) {
@@ -409,7 +417,7 @@ exports.submitAnswer = async (req, res) => {
 
     // Check timer
     const now = new Date();
-    const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 15 * 60 * 1000);
+    const endTime = sessionEndTime ? new Date(sessionEndTime) : new Date(Date.now() + 30 * 60 * 1000);
     const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
 
     if (remainingSeconds <= 0) {
@@ -501,7 +509,7 @@ exports.submitAnswer = async (req, res) => {
 
 exports.submitTest = async (req, res) => {
   try {
-    const { candidateId, isAuto } = req.body;
+    const { candidateId, isAuto, reason } = req.body;
     if (!candidateId) {
       return res.status(400).json({ success: false, message: 'Candidate ID is required.' });
     }
@@ -543,11 +551,19 @@ exports.submitTest = async (req, res) => {
     const percentage = Math.round((score / total) * 100 * 100) / 100;
 
     // Update candidate
-    await db.run(`
-      UPDATE candidates
-      SET status = ?, testSubmittedAt = ?, score = ?, percentage = ?, totalQuestions = ?
-      WHERE id = ?
-    `, [finalStatus, now, score, percentage, total, candidateId]);
+    if (reason) {
+      await db.run(`
+        UPDATE candidates
+        SET status = ?, testSubmittedAt = ?, score = ?, percentage = ?, totalQuestions = ?, violationReason = ?
+        WHERE id = ?
+      `, [finalStatus, now, score, percentage, total, reason, candidateId]);
+    } else {
+      await db.run(`
+        UPDATE candidates
+        SET status = ?, testSubmittedAt = ?, score = ?, percentage = ?, totalQuestions = ?
+        WHERE id = ?
+      `, [finalStatus, now, score, percentage, total, candidateId]);
+    }
 
     // Update session
     await db.run('UPDATE test_sessions SET status = ? WHERE candidateId = ?', [finalStatus, candidateId]);
@@ -564,7 +580,8 @@ exports.submitTest = async (req, res) => {
       status: finalStatus,
       submittedAt: now,
       score: showScore ? score : undefined,
-      totalQuestions: total
+      totalQuestions: total,
+      violationReason: reason || undefined
     });
 
   } catch (err) {
@@ -572,3 +589,60 @@ exports.submitTest = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Failed to submit assessment.' });
   }
 };
+
+// Record anti-cheating violation (Tab switch, window blur, fullscreen exit)
+exports.recordViolation = async (req, res) => {
+  try {
+    const { candidateId, reason } = req.body;
+    if (!candidateId) {
+      return res.status(400).json({ success: false, message: 'Candidate ID is required.' });
+    }
+
+    const candidate = await db.get('SELECT * FROM candidates WHERE id = ?', [candidateId]);
+    if (!candidate) {
+      return res.status(404).json({ success: false, message: 'Candidate not found.' });
+    }
+
+    if (candidate.status === 'COMPLETED' || candidate.status === 'AUTO_SUBMITTED') {
+      return res.status(200).json({
+        success: true,
+        message: 'Assessment is already finalized.',
+        status: candidate.status,
+        warnings: Number(candidate.cheatingWarnings || candidate.cheatingwarnings || 0)
+      });
+    }
+
+    const currentWarnings = Number(candidate.cheatingWarnings || candidate.cheatingwarnings || 0);
+    const newWarnings = currentWarnings + 1;
+    const violationText = reason || 'Tab switch / window blur detected';
+
+    if (newWarnings >= 3) {
+      const fullReason = `Disqualified: Exceeded maximum allowed anti-cheating violations (3 strikes) - Last event: ${violationText}`;
+      await autoSubmitTest(candidateId, fullReason);
+      await db.run('UPDATE candidates SET cheatingWarnings = ? WHERE id = ?', [newWarnings, candidateId]);
+      await db.run('UPDATE test_sessions SET cheatingWarnings = ? WHERE candidateId = ?', [newWarnings, candidateId]);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Disqualified: 3 cheating violations reached. Assessment terminated.',
+        warnings: newWarnings,
+        autoSubmitted: true,
+        status: 'AUTO_SUBMITTED'
+      });
+    } else {
+      await db.run('UPDATE candidates SET cheatingWarnings = ? WHERE id = ?', [newWarnings, candidateId]);
+      await db.run('UPDATE test_sessions SET cheatingWarnings = ? WHERE candidateId = ?', [newWarnings, candidateId]);
+
+      return res.status(200).json({
+        success: true,
+        message: `Warning recorded: Strike ${newWarnings} of 3.`,
+        warnings: newWarnings,
+        autoSubmitted: false
+      });
+    }
+  } catch (err) {
+    console.error('Record violation error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to record violation.' });
+  }
+};
+

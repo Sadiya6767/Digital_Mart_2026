@@ -52,7 +52,9 @@ if (isPostgres) {
     isactive: 'isActive',
     passwordhash: 'passwordHash',
     createdat: 'createdAt',
-    jobprofile: 'jobProfile'
+    jobprofile: 'jobProfile',
+    cheatingwarnings: 'cheatingWarnings',
+    violationreason: 'violationReason'
   };
 
   function normalizeRow(row) {
@@ -210,6 +212,21 @@ if (isPostgres) {
         // Ignored
       }
       try {
+        await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS cheatingWarnings INTEGER DEFAULT 0;");
+      } catch (e) {
+        // Ignored
+      }
+      try {
+        await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS violationReason TEXT;");
+      } catch (e) {
+        // Ignored
+      }
+      try {
+        await pool.query("ALTER TABLE test_sessions ADD COLUMN IF NOT EXISTS cheatingWarnings INTEGER DEFAULT 0;");
+      } catch (e) {
+        // Ignored
+      }
+      try {
         await pool.query('CREATE INDEX IF NOT EXISTS idx_candidates_jobprofile ON candidates(jobProfile);');
       } catch (e) {
         // Ignored
@@ -241,23 +258,29 @@ if (isPostgres) {
         console.log(`[Neon Postgres] Default admin created: ${config.ADMIN_USERNAME}`);
       }
 
-      // Check if questions need auto-seeding (ensure full 60 questions: 30 Web Dev + 30 Biz Dev)
-      const qCountRes = await pool.query('SELECT COUNT(*) as count FROM questions');
-      const currentCount = parseInt(qCountRes.rows[0].count, 10);
-      if (currentCount < 60) {
-        console.log(`[Neon Postgres] Questions table has ${currentCount} questions. Ensuring full 60 questions...`);
-        const { questions } = require('../database/seedQuestions');
-        for (const q of questions) {
-          const exists = await pool.query('SELECT id FROM questions WHERE question = $1', [q.question]);
-          if (exists.rows.length === 0) {
-            await pool.query(`
-              INSERT INTO questions (category, question, optionA, optionB, optionC, optionD, correctAnswer, difficulty, isActive)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 1)
-            `, [q.category, q.question, q.optionA, q.optionB, q.optionC, q.optionD, q.correctAnswer, q.difficulty]);
-          }
+      // Ensure questions bank is up-to-date with seedQuestions
+      const questions = require('../database/questionsData');
+      const questionTexts = questions.map(q => q.question);
+
+      for (const q of questions) {
+        const exists = await pool.query('SELECT id FROM questions WHERE question = $1', [q.question]);
+        if (exists.rows.length === 0) {
+          await pool.query(`
+            INSERT INTO questions (category, question, optionA, optionB, optionC, optionD, correctAnswer, difficulty, isActive)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 1)
+          `, [q.category, q.question, q.optionA, q.optionB, q.optionC, q.optionD, q.correctAnswer, q.difficulty]);
+        } else {
+          await pool.query('UPDATE questions SET isActive = 1 WHERE id = $1', [exists.rows[0].id]);
         }
-        console.log(`[Neon Postgres] Successfully verified and updated questions bank.`);
       }
+
+      // Deactivate any obsolete questions not in current seed bank (preserves FK in answers)
+      await pool.query('UPDATE questions SET isActive = 0 WHERE question NOT IN ($1:list)', [questionTexts]).catch(async () => {
+        // Fallback for pg standard parameter array
+        await pool.query('UPDATE questions SET isActive = 0 WHERE NOT (question = ANY($1))', [questionTexts]);
+      }).catch(() => {});
+
+      console.log(`[Neon Postgres] Successfully verified and updated questions bank to 60 advance questions.`);
 
       console.log('[Neon Postgres] Connected and verified successfully.');
     } catch (err) {
@@ -380,6 +403,21 @@ if (isPostgres) {
       // Ignored if already exists
     }
     try {
+      sqliteDb.exec("ALTER TABLE candidates ADD COLUMN cheatingWarnings INTEGER DEFAULT 0;");
+    } catch (e) {
+      // Ignored if already exists
+    }
+    try {
+      sqliteDb.exec("ALTER TABLE candidates ADD COLUMN violationReason TEXT;");
+    } catch (e) {
+      // Ignored if already exists
+    }
+    try {
+      sqliteDb.exec("ALTER TABLE test_sessions ADD COLUMN cheatingWarnings INTEGER DEFAULT 0;");
+    } catch (e) {
+      // Ignored if already exists
+    }
+    try {
       sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_candidates_jobprofile ON candidates(jobProfile);');
     } catch (e) {
       // Ignored if already exists
@@ -389,27 +427,33 @@ if (isPostgres) {
     insertSetting.run('SHOW_STUDENT_SCORE', config.SHOW_STUDENT_SCORE ? 'true' : 'false');
     insertSetting.run('ENABLE_TAB_WARNING', config.ENABLE_TAB_WARNING ? 'true' : 'false');
 
-    // Check if questions need auto-seeding (ensure full 60 questions: 30 Web Dev + 30 Biz Dev)
+    // Ensure full 60 questions from seedQuestions
     try {
-      const qCount = sqliteDb.prepare('SELECT COUNT(*) as count FROM questions').get();
-      if (!qCount || qCount.count < 60) {
-        console.log(`[SQLite] Questions table has ${qCount ? qCount.count : 0} questions. Ensuring full 60 questions...`);
-        const { questions } = require('../database/seedQuestions');
-        const checkQ = sqliteDb.prepare('SELECT id FROM questions WHERE question = ?');
-        const insertQ = sqliteDb.prepare(`
-          INSERT INTO questions (category, question, optionA, optionB, optionC, optionD, correctAnswer, difficulty, isActive)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
-        `);
-        for (const q of questions) {
-          const exists = checkQ.get(q.question);
-          if (!exists) {
-            insertQ.run(q.category, q.question, q.optionA, q.optionB, q.optionC, q.optionD, q.correctAnswer, q.difficulty);
-          }
+      const questions = require('../database/questionsData');
+      const checkQ = sqliteDb.prepare('SELECT id FROM questions WHERE question = ?');
+      const insertQ = sqliteDb.prepare(`
+        INSERT INTO questions (category, question, optionA, optionB, optionC, optionD, correctAnswer, difficulty, isActive)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+      `);
+      const activateQ = sqliteDb.prepare('UPDATE questions SET isActive = 1 WHERE id = ?');
+
+      for (const q of questions) {
+        const exists = checkQ.get(q.question);
+        if (!exists) {
+          insertQ.run(q.category, q.question, q.optionA, q.optionB, q.optionC, q.optionD, q.correctAnswer, q.difficulty);
+        } else {
+          activateQ.run(exists.id);
         }
-        console.log(`[SQLite] Successfully ensured all ${questions.length} questions.`);
       }
+
+      // Deactivate obsolete questions not in current seed bank
+      const placeholders = questions.map(() => '?').join(',');
+      const questionTexts = questions.map(q => q.question);
+      sqliteDb.prepare(`UPDATE questions SET isActive = 0 WHERE question NOT IN (${placeholders})`).run(...questionTexts);
+
+      console.log(`[SQLite] Successfully synced questions bank to 60 advance questions.`);
     } catch (e) {
-      console.warn('[SQLite] Auto-seed warning:', e.message);
+      console.warn('[SQLite] Questions sync warning:', e.message);
     }
   }
 

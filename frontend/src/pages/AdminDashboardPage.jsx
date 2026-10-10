@@ -213,6 +213,7 @@ export default function AdminDashboardPage() {
     const headers = [
       'Candidate ID',
       'Full Name',
+      'Job Profile',
       'Email Address',
       'Phone Number',
       'College Name',
@@ -220,7 +221,9 @@ export default function AdminDashboardPage() {
       'Branch',
       'Graduation Year',
       'Test Status',
-      'Score (out of 50)',
+      'Cheating Strikes',
+      'Violation Reason',
+      'Score (out of 30)',
       'Total Questions',
       'Percentage (%)',
       'Registered Date',
@@ -231,6 +234,7 @@ export default function AdminDashboardPage() {
     const rows = candidates.map(c => [
       c.id,
       `"${(c.fullName || '').replace(/"/g, '""')}"`,
+      `"${(c.jobProfile || c.jobprofile || 'Web Development').replace(/"/g, '""')}"`,
       `"${(c.email || '').replace(/"/g, '""')}"`,
       `"${(c.phone || '').replace(/"/g, '""')}"`,
       `"${(c.collegeName || '').replace(/"/g, '""')}"`,
@@ -238,8 +242,10 @@ export default function AdminDashboardPage() {
       `"${(c.branch || '').replace(/"/g, '""')}"`,
       c.graduationYear || '',
       c.status || '',
+      c.cheatingWarnings || c.cheatingwarnings || 0,
+      `"${(c.violationReason || c.violationreason || 'None').replace(/"/g, '""')}"`,
       c.score ?? 0,
-      c.totalQuestions || 50,
+      c.totalQuestions || c.totalquestions || 30,
       `"${c.percentage || 0}%"`,
       `"${c.registeredAt ? new Date(c.registeredAt).toLocaleString('en-IN') : ''}"`,
       `"${c.testStartedAt ? new Date(c.testStartedAt).toLocaleString('en-IN') : ''}"`,
@@ -501,6 +507,7 @@ export default function AdminDashboardPage() {
                 <th>College & Branch</th>
                 <th>Score</th>
                 <th>Percentage</th>
+                <th>Anti-Cheat</th>
                 <th>Status</th>
                 <th>Submitted At</th>
                 <th>Resume</th>
@@ -510,13 +517,13 @@ export default function AdminDashboardPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <td colSpan="12" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                     Loading candidate data...
                   </td>
                 </tr>
               ) : candidates.length === 0 ? (
                 <tr>
-                  <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <td colSpan="12" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                     No candidates found matching the criteria.
                   </td>
                 </tr>
@@ -565,6 +572,30 @@ export default function AdminDashboardPage() {
                       {c.status === 'COMPLETED' || c.status === 'AUTO_SUBMITTED' ? (
                         <span style={{ fontWeight: '600' }}>{c.percentage}%</span>
                       ) : '-'}
+                    </td>
+                    <td>
+                      {(() => {
+                        const strikes = Number(c.cheatingWarnings || c.cheatingwarnings || 0);
+                        if (strikes === 0) {
+                          return (
+                            <span style={{ fontSize: '0.725rem', fontWeight: '700', padding: '3px 8px', borderRadius: '6px', backgroundColor: '#dcfce7', color: '#16a34a' }}>
+                              Clean (0)
+                            </span>
+                          );
+                        } else if (strikes < 3) {
+                          return (
+                            <span style={{ fontSize: '0.725rem', fontWeight: '700', padding: '3px 8px', borderRadius: '6px', backgroundColor: '#fef3c7', color: '#b45309' }}>
+                              ⚠️ {strikes} Strike{strikes > 1 ? 's' : ''}
+                            </span>
+                          );
+                        } else {
+                          return (
+                            <span style={{ fontSize: '0.725rem', fontWeight: '700', padding: '3px 8px', borderRadius: '6px', backgroundColor: '#fee2e2', color: '#dc2626' }}>
+                              🚨 Disqualified ({strikes})
+                            </span>
+                          );
+                        }
+                      })()}
                     </td>
                     <td>
                       <span className={`status-badge status-${c.status}`}>
@@ -728,11 +759,20 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
 
-                  <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                  <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span className={`status-badge status-${candidateDetails.candidate.status}`}>
                         {candidateDetails.candidate.status.replace('_', ' ')}
                       </span>
+                      {Number(candidateDetails.candidate.cheatingWarnings || candidateDetails.candidate.cheatingwarnings || 0) > 0 ? (
+                        <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 8px', borderRadius: '6px', backgroundColor: Number(candidateDetails.candidate.cheatingWarnings || candidateDetails.candidate.cheatingwarnings || 0) >= 3 ? '#fee2e2' : '#fef3c7', color: Number(candidateDetails.candidate.cheatingWarnings || candidateDetails.candidate.cheatingwarnings || 0) >= 3 ? '#dc2626' : '#b45309' }}>
+                          ⚠️ {candidateDetails.candidate.cheatingWarnings || candidateDetails.candidate.cheatingwarnings} Cheating Strike(s)
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 8px', borderRadius: '6px', backgroundColor: '#dcfce7', color: '#16a34a' }}>
+                          ✅ Clean (0 Strikes)
+                        </span>
+                      )}
                     </div>
 
                     <a
@@ -745,6 +785,12 @@ export default function AdminDashboardPage() {
                       <ExternalLink size={14} /> Open Resume PDF
                     </a>
                   </div>
+
+                  {(candidateDetails.candidate.violationReason || candidateDetails.candidate.violationreason) && (
+                    <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', fontSize: '0.8rem' }}>
+                      🚨 <strong>Security Violation:</strong> {candidateDetails.candidate.violationReason || candidateDetails.candidate.violationreason}
+                    </div>
+                  )}
                 </div>
 
                 {/* Score Summary Metrics */}

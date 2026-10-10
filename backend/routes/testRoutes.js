@@ -17,4 +17,7 @@ router.post('/answer', testController.submitAnswer);
 // POST /api/test/submit
 router.post('/submit', testController.submitTest);
 
+// POST /api/test/violation (anti-cheating strike)
+router.post('/violation', testController.recordViolation);
+
 module.exports = router;

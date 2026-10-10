@@ -186,6 +186,26 @@ export default function RegistrationPage() {
             <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '4px' }}>
               Complete the registration form below to begin your assessment.
             </p>
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              padding: '8px 14px',
+              marginTop: '10px',
+              fontSize: '0.8rem',
+              color: '#334155'
+            }}>
+              <span>⏱️ <strong>Duration:</strong> 30 Minutes</span>
+              <span>&bull;</span>
+              <span>🛡️ <strong>Anti-Cheat:</strong> 3-Strike Auto-Disqualification</span>
+              <span>&bull;</span>
+              <span>🖥️ <strong>Mode:</strong> Mandatory Fullscreen</span>
+            </div>
           </div>
 
           {serverError && (
@@ -271,7 +291,7 @@ export default function RegistrationPage() {
                           padding: '3px 8px',
                           borderRadius: '6px'
                         }}>
-                          30 Questions &bull; 15 Mins
+                          30 Questions &bull; 30 Mins
                         </div>
                       </div>
                     </div>
@@ -328,7 +348,7 @@ export default function RegistrationPage() {
                           padding: '3px 8px',
                           borderRadius: '6px'
                         }}>
-                          30 Questions &bull; 15 Mins
+                          30 Questions &bull; 30 Mins
                         </div>
                       </div>
                     </div>

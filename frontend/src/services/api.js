@@ -43,11 +43,20 @@ export const api = {
     return response.json();
   },
 
-  async submitTest(candidateId, isAuto = false) {
+  async submitTest(candidateId, isAuto = false, reason = '') {
     const response = await fetch(`${BASE_URL}/test/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ candidateId, isAuto })
+      body: JSON.stringify({ candidateId, isAuto, reason })
+    });
+    return response.json();
+  },
+
+  async recordViolation(candidateId, reason = 'Tab switch / window blur') {
+    const response = await fetch(`${BASE_URL}/test/violation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ candidateId, reason })
     });
     return response.json();
   },

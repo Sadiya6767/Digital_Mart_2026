@@ -90,6 +90,12 @@ export default function ResultPage() {
                 </span>
               </div>
             )}
+
+            {submission?.violationReason && (
+              <div style={{ marginTop: '14px', padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                ⚠️ <strong>Security Flag:</strong> {submission.violationReason}
+              </div>
+            )}
           </div>
 
           <p style={{ fontSize: '1rem', color: '#334155', lineHeight: '1.6', marginBottom: '16px' }}>
