@@ -245,6 +245,12 @@ if (isPostgres) {
         ON CONFLICT (key) DO NOTHING;
       `, [config.ENABLE_TAB_WARNING ? 'true' : 'false']);
 
+      await pool.query(`
+        INSERT INTO app_settings (key, value)
+        VALUES ('ENABLE_TEST', $1)
+        ON CONFLICT (key) DO NOTHING;
+      `, [config.ENABLE_TEST ? 'true' : 'false']);
+
       // Ensure admin exists
       const bcrypt = require('bcryptjs');
       const adminRes = await pool.query('SELECT id FROM admin_users WHERE username = $1', [config.ADMIN_USERNAME]);
@@ -426,6 +432,7 @@ if (isPostgres) {
     const insertSetting = sqliteDb.prepare('INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)');
     insertSetting.run('SHOW_STUDENT_SCORE', config.SHOW_STUDENT_SCORE ? 'true' : 'false');
     insertSetting.run('ENABLE_TAB_WARNING', config.ENABLE_TAB_WARNING ? 'true' : 'false');
+    insertSetting.run('ENABLE_TEST', config.ENABLE_TEST ? 'true' : 'false');
 
     // Ensure full 100 questions from seedQuestions
     try {

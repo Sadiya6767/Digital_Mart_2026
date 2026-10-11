@@ -132,6 +132,16 @@ exports.startTest = async (req, res) => {
     }
 
     // New Session Creation for Candidate
+    // 0. Check if assessment is currently enabled by administrator
+    const testSetting = await db.get("SELECT value FROM app_settings WHERE key = 'ENABLE_TEST'");
+    if (testSetting && testSetting.value === 'false') {
+      return res.status(403).json({
+        success: false,
+        code: 'TEST_DISABLED',
+        message: 'The assessment is currently disabled by the administrator.'
+      });
+    }
+
     // 1. Fetch questions from ultra-fast cache
     const allQuestions = await getCachedQuestions();
     if (allQuestions.length < 50) {
@@ -643,6 +653,21 @@ exports.recordViolation = async (req, res) => {
   } catch (err) {
     console.error('Record violation error:', err);
     return res.status(500).json({ success: false, message: 'Failed to record violation.' });
+  }
+};
+
+// Public endpoint to check if assessment is enabled
+exports.getPublicStatus = async (req, res) => {
+  try {
+    const row = await db.get("SELECT value FROM app_settings WHERE key = 'ENABLE_TEST'");
+    const isTestEnabled = !row || row.value === 'true';
+    return res.status(200).json({
+      success: true,
+      isTestEnabled
+    });
+  } catch (err) {
+    console.error('Get test public status error:', err);
+    return res.status(200).json({ success: true, isTestEnabled: true });
   }
 };
 

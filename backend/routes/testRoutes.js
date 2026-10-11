@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const testController = require('../controllers/testController');
 
+// GET /api/test/status (public test enabled status)
+router.get('/status', testController.getPublicStatus);
+
 // POST /api/test/start
 router.post('/start', testController.startTest);
 

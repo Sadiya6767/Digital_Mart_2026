@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Code2, Briefcase, CheckCircle2 } from 'lucide-react';
 import Header from '../components/Header';
@@ -23,6 +23,26 @@ export default function RegistrationPage() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [isTestEnabled, setIsTestEnabled] = useState(true);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+
+  useEffect(() => {
+    checkTestStatus();
+  }, []);
+
+  const checkTestStatus = async () => {
+    try {
+      setCheckingStatus(true);
+      const res = await api.getTestStatus();
+      if (res && res.success) {
+        setIsTestEnabled(res.isTestEnabled !== false);
+      }
+    } catch (err) {
+      console.warn('Check test status error:', err);
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -101,6 +121,11 @@ export default function RegistrationPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
+
+    if (!isTestEnabled) {
+      setServerError('The assessment is currently disabled by the administrator. Registrations are closed.');
+      return;
+    }
 
     if (!validateForm()) return;
 
@@ -206,6 +231,31 @@ export default function RegistrationPage() {
               <span>📝 <strong>Questions:</strong> 50 Questions</span>
             </div>
           </div>
+
+          {!isTestEnabled && !checkingStatus && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              backgroundColor: '#fef2f2',
+              border: '1.5px solid #fca5a5',
+              borderRadius: '10px',
+              padding: '14px 18px',
+              marginTop: '14px',
+              marginBottom: '10px',
+              color: '#991b1b'
+            }}>
+              <AlertCircle size={22} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <strong style={{ fontSize: '0.95rem', display: 'block', marginBottom: '2px' }}>
+                  Assessment Currently Closed / Disabled
+                </strong>
+                <p style={{ fontSize: '0.85rem', lineHeight: '1.45', margin: 0 }}>
+                  The online assessment has been temporarily closed by the administrator. New candidate registrations and test entries are currently paused. Please check back later or contact HR.
+                </p>
+              </div>
+            </div>
+          )}
 
           {serverError && (
             <div className="alert-banner alert-danger" style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
@@ -557,17 +607,25 @@ export default function RegistrationPage() {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  style={{ width: '100%', padding: '14px', fontSize: '1.05rem' }}
-                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    fontSize: '1.05rem',
+                    opacity: !isTestEnabled ? 0.6 : 1,
+                    cursor: !isTestEnabled ? 'not-allowed' : 'pointer'
+                  }}
+                  disabled={loading || !isTestEnabled}
                 >
                   {loading ? (
                     <>
                       <Loader2 size={20} className="animate-spin" />
                       Validating & Starting Test...
                     </>
+                  ) : (!isTestEnabled ? (
+                    'Assessment Currently Closed'
                   ) : (
                     'Start Test'
-                  )}
+                  ))}
                 </button>
               </div>
             </div>

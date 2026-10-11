@@ -61,6 +61,15 @@ export const api = {
     return response.json();
   },
 
+  async getTestStatus() {
+    try {
+      const response = await fetch(`${BASE_URL}/test/status`);
+      return response.json();
+    } catch (err) {
+      return { success: true, isTestEnabled: true };
+    }
+  },
+
   // Admin APIs
   async adminLogin(username, password) {
     const response = await fetch(`${BASE_URL}/admin/login`, {

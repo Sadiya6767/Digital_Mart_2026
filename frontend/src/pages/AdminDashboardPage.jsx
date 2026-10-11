@@ -44,7 +44,8 @@ export default function AdminDashboardPage() {
   // Settings
   const [appSettings, setAppSettings] = useState({
     SHOW_STUDENT_SCORE: false,
-    ENABLE_TAB_WARNING: true
+    ENABLE_TAB_WARNING: true,
+    ENABLE_TEST: true
   });
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
@@ -346,6 +347,34 @@ export default function AdminDashboardPage() {
               <Download size={16} />
               <span>Export CSV (Excel)</span>
             </button>
+
+            <div
+              onClick={() => setShowSettingsModal(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                fontSize: '0.825rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                backgroundColor: appSettings.ENABLE_TEST !== false ? '#ecfdf5' : '#fef2f2',
+                border: appSettings.ENABLE_TEST !== false ? '1.5px solid #a7f3d0' : '1.5px solid #fecaca',
+                color: appSettings.ENABLE_TEST !== false ? '#065f46' : '#991b1b',
+                transition: 'all 0.2s ease'
+              }}
+              title="Click to view or change Assessment status"
+            >
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: appSettings.ENABLE_TEST !== false ? '#10b981' : '#ef4444',
+                boxShadow: appSettings.ENABLE_TEST !== false ? '0 0 6px rgba(16, 185, 129, 0.6)' : 'none'
+              }} />
+              <span>{appSettings.ENABLE_TEST !== false ? '● Test is Active' : '○ Test is Disabled'}</span>
+            </div>
 
             <button
               className="btn btn-secondary"
@@ -900,6 +929,48 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              {/* Enable / Disable Test Setting */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '14px',
+                background: appSettings.ENABLE_TEST !== false ? '#f0fdf4' : '#fef2f2',
+                border: appSettings.ENABLE_TEST !== false ? '1.5px solid #86efac' : '1.5px solid #fca5a5',
+                borderRadius: '10px'
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>Assessment Status (Enable / Disable Test)</strong>
+                    <span style={{
+                      fontSize: '0.725rem',
+                      fontWeight: '800',
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: appSettings.ENABLE_TEST !== false ? '#dcfce7' : '#fee2e2',
+                      color: appSettings.ENABLE_TEST !== false ? '#15803d' : '#b91c1c'
+                    }}>
+                      {appSettings.ENABLE_TEST !== false ? 'ENABLED' : 'DISABLED'}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
+                    Turn off this switch to stop candidate registrations and pause test access. Turn on to re-open the test.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleToggleSetting('ENABLE_TEST')}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  title={appSettings.ENABLE_TEST !== false ? 'Click to Disable Test' : 'Click to Enable Test'}
+                >
+                  {appSettings.ENABLE_TEST !== false ? (
+                    <ToggleRight size={38} color="#16a34a" />
+                  ) : (
+                    <ToggleLeft size={38} color="#dc2626" />
+                  )}
+                </button>
+              </div>
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
                 <div>
                   <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>Show Student Score</strong>

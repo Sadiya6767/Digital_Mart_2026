@@ -289,7 +289,11 @@ exports.getResume = async (req, res) => {
 exports.getSettings = async (req, res) => {
   try {
     const rows = await db.all('SELECT key, value FROM app_settings');
-    const settings = {};
+    const settings = {
+      SHOW_STUDENT_SCORE: false,
+      ENABLE_TAB_WARNING: true,
+      ENABLE_TEST: true
+    };
     for (const r of rows) {
       settings[r.key] = r.value === 'true';
     }
@@ -307,7 +311,13 @@ exports.updateSettings = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Setting key is required.' });
     }
 
-    await db.run('UPDATE app_settings SET value = ? WHERE key = ?', [value ? 'true' : 'false', key]);
+    const strVal = value ? 'true' : 'false';
+    const exists = await db.get('SELECT key FROM app_settings WHERE key = ?', [key]);
+    if (exists) {
+      await db.run('UPDATE app_settings SET value = ? WHERE key = ?', [strVal, key]);
+    } else {
+      await db.run('INSERT INTO app_settings (key, value) VALUES (?, ?)', [key, strVal]);
+    }
 
     return res.status(200).json({
       success: true,

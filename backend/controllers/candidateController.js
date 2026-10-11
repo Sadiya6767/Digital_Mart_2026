@@ -31,6 +31,16 @@ exports.registerCandidate = async (req, res) => {
       confirmed
     } = req.body;
 
+    // 0. Check if assessment is currently enabled by administrator
+    const testSetting = await db.get("SELECT value FROM app_settings WHERE key = 'ENABLE_TEST'");
+    if (testSetting && testSetting.value === 'false') {
+      return res.status(403).json({
+        success: false,
+        code: 'TEST_DISABLED',
+        message: 'The assessment is currently disabled by the administrator. Registrations are closed.'
+      });
+    }
+
     // 1. Validate required fields
     if (!fullName || !email || !phone || !collegeName || !degree || !branch || !graduationYear) {
       return res.status(400).json({ success: false, message: 'All fields are required.' });
