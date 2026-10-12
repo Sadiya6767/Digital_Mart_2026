@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
               Admin Portal
             </h2>
             <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '4px' }}>
-              Digital Mart Solutions &bull; Assessment Control Center
+              S2i Digital Media &bull; Assessment Control Center
             </p>
           </div>
 

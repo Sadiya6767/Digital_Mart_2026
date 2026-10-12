@@ -34,7 +34,7 @@ app.use('/api/admin', adminRoutes);
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
-    company: 'Digital Mart Solutions',
+    company: 'S2i Digital Media',
     timestamp: new Date().toISOString()
   });
 });
@@ -51,7 +51,7 @@ app.use((err, req, res, next) => {
 const PORT = config.PORT;
 app.listen(PORT, () => {
   console.log(`====================================================`);
-  console.log(` Digital Mart Solutions Assessment Server Running!  `);
+  console.log(` S2i Digital Media Assessment Server Running!       `);
   console.log(` Port: ${PORT}                                       `);
   console.log(` Health: http://localhost:${PORT}/api/health        `);
   console.log(`====================================================`);

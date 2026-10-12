@@ -102,7 +102,7 @@ export default function ResultPage() {
             Thank you for completing the assessment.
           </p>
           <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: '1.6', marginBottom: '32px' }}>
-            The Digital Mart Solutions recruitment team will review your responses and evaluation report alongside your resume. Shortlisted candidates will be notified via email for the technical and HR interview rounds.
+            The S2i Digital Media recruitment team will review your responses and evaluation report alongside your resume. Shortlisted candidates will be notified via email for the technical and HR interview rounds.
           </p>
 
           <div>

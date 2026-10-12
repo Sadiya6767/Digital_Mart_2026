@@ -1,6 +1,6 @@
-# Digital Mart Solutions - Online Assessment Platform
+# S2i Digital Media - Online Assessment Platform
 
-A production-grade, full-stack Online Assessment Platform tailored for **Digital Mart Solutions** for evaluating candidates applying for the **Web Developer + Business Development Executive** position.
+A production-grade, full-stack Online Assessment Platform tailored for **S2i Digital Media** for evaluating candidates applying for the **Web Developer** and **Business Development Executive** positions.
 
 ---
 
@@ -91,7 +91,7 @@ digital-mart-assessment/
     └── src/
         ├── App.jsx
         ├── main.jsx
-        ├── index.css             # Digital Mart blue & white corporate design
+        ├── index.css             # S2i Digital Media modern corporate design
         ├── components/
         │   ├── Header.jsx
         │   ├── Modal.jsx

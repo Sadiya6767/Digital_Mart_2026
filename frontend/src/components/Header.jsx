@@ -6,10 +6,10 @@ export default function Header({ isAdmin = false, onAdminLogout = null }) {
     <header className="app-header">
       <div className="brand-container">
         <div className="brand-logo-icon">
-          DM
+          S2i
         </div>
         <div className="brand-info">
-          <h1>Digital Mart Solutions</h1>
+          <h1>S2i Digital Media</h1>
           <p>Online Assessment Platform</p>
         </div>
       </div>

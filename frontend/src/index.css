@@ -62,7 +62,7 @@ body {
 }
 
 .brand-logo-icon {
-  width: 36px;
+  width: 42px;
   height: 36px;
   background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
   color: white;
@@ -70,9 +70,9 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.5px;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -0.3px;
 }
 
 .brand-info h1 {

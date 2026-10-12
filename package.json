@@ -1,7 +1,7 @@
 {
-  "name": "digital-mart-assessment",
+  "name": "s2i-digital-media-assessment",
   "version": "1.0.0",
-  "description": "Full-Stack Online Assessment Platform for Digital Mart Solutions",
+  "description": "Full-Stack Online Assessment Platform for S2i Digital Media",
   "scripts": {
     "start:backend": "node backend/server.js",
     "seed": "node backend/database/seedQuestions.js",

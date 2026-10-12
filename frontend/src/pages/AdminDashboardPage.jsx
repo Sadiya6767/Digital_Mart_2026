@@ -263,7 +263,7 @@ export default function AdminDashboardPage() {
     const link = document.createElement('a');
     const dateStr = new Date().toISOString().slice(0, 10);
     link.href = url;
-    link.setAttribute('download', `Digital_Mart_Candidates_${dateStr}.csv`);
+    link.setAttribute('download', `S2i_Digital_Media_Candidates_${dateStr}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -292,7 +292,7 @@ export default function AdminDashboardPage() {
               Candidate Evaluation Dashboard
             </h2>
             <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
-              Digital Mart Solutions &bull; Assessment Portal
+              S2i Digital Media &bull; Assessment Portal
             </p>
           </div>
 

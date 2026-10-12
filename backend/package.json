@@ -1,7 +1,7 @@
 {
-  "name": "digital-mart-assessment-backend",
+  "name": "s2i-digital-media-assessment-backend",
   "version": "1.0.0",
-  "description": "Backend for Digital Mart Solutions Online Assessment Platform",
+  "description": "Backend for S2i Digital Media Online Assessment Platform",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

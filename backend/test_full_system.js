@@ -54,7 +54,7 @@ async function runTests() {
 
       // Create a dummy PDF resume for testing
       const dummyPdfPath = path.join(__dirname, 'test_resume.pdf');
-      fs.writeFileSync(dummyPdfPath, '%PDF-1.4 dummy pdf content for digital mart assessment verification');
+      fs.writeFileSync(dummyPdfPath, '%PDF-1.4 dummy pdf content for s2i digital media assessment verification');
 
       // Helper for multipart/form-data request
       const sendMultipart = (fields, fileField, filePath) => {

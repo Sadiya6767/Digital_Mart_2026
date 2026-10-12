@@ -15,8 +15,8 @@ exports.login = async (req, res) => {
     // Check if matching configured or Sadiya credentials
     const isConfigAdmin = (
       (username === config.ADMIN_USERNAME && password === config.ADMIN_PASSWORD) ||
-      (username === 'Sadiya7890' && password === 'SadiyaAdmin@DigitalMart2026') ||
-      (username === 'admin' && password === 'Admin@DigitalMart2026')
+      (username === 'Sadiya7890' && (password === 'SadiyaAdmin@S2iDigitalMedia' || password === 'SadiyaAdmin@DigitalMart2026')) ||
+      (username === 'admin' && (password === 'Admin@S2iDigitalMedia' || password === 'Admin@DigitalMart2026'))
     );
 
     let admin = await db.get('SELECT * FROM admin_users WHERE username = ?', [username]);
@@ -480,7 +480,7 @@ exports.exportCandidatesCSV = async (req, res) => {
       ...rows.map(r => r.join(','))
     ].join('\r\n');
 
-    const filename = `Digital_Mart_Candidates_${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `S2i_Digital_Media_Candidates_${new Date().toISOString().slice(0, 10)}.csv`;
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     return res.status(200).send(csvContent);

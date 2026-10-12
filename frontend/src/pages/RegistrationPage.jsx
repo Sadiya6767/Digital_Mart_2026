@@ -204,7 +204,7 @@ export default function RegistrationPage() {
       <div className="page-container">
         <div className="content-card">
           <div className="form-title-group">
-            <h2>Digital Mart Solutions</h2>
+            <h2>S2i Digital Media</h2>
             <p className="form-subtitle">
               Online Assessment
             </p>
