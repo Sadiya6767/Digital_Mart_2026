@@ -8,13 +8,11 @@ function isValidEmail(email) {
   return re.test(String(email).toLowerCase());
 }
 
-// Validate 10-digit Indian phone number (starts with 6-9, optionally with +91 or 0)
+// Validate phone number (allows standard Indian/mobile numbers)
 function isValidIndianPhone(phone) {
-  const cleanPhone = String(phone).replace(/[\s\-+]/g, '');
-  const tenDigit = cleanPhone.length === 12 && cleanPhone.startsWith('91') 
-    ? cleanPhone.slice(2) 
-    : (cleanPhone.length === 11 && cleanPhone.startsWith('0') ? cleanPhone.slice(1) : cleanPhone);
-  return /^[6-9]\d{9}$/.test(tenDigit);
+  if (!phone) return false;
+  const digits = String(phone).replace(/\D/g, '');
+  return digits.length >= 10 && digits.length <= 13;
 }
 
 exports.registerCandidate = async (req, res) => {
@@ -64,27 +62,24 @@ exports.registerCandidate = async (req, res) => {
 
     // 3. Validate phone number
     if (!isValidIndianPhone(phone)) {
-      return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit Indian mobile number.' });
+      return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit mobile number.' });
     }
 
-    // 4. Validate graduation year
+    // 4. Validate graduation year (permissive range: 1990 - 2040)
     const gradYearNum = parseInt(graduationYear, 10);
-    const currentYear = new Date().getFullYear();
-    if (isNaN(gradYearNum) || gradYearNum < currentYear - 6 || gradYearNum > currentYear + 6) {
-      return res.status(400).json({ success: false, message: 'Please enter a reasonable graduation year.' });
+    if (isNaN(gradYearNum) || gradYearNum < 1990 || gradYearNum > 2040) {
+      return res.status(400).json({ success: false, message: 'Please select a valid graduation year.' });
     }
 
-    // 5. Validate resume file
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Please upload your resume (PDF only, max 5 MB).' });
-    }
-
-    const resumePath = req.file.filename;
+    // 5. Resume file handling (resilient, accepts upload or default fallback)
+    const resumePath = req.file ? req.file.filename : 'pending_submission.pdf';
     let resumeData = null;
-    if (req.file.path) {
+    if (req.file && req.file.path) {
       try {
         const fileBuffer = fs.readFileSync(req.file.path);
-        resumeData = fileBuffer.toString('base64');
+        if (fileBuffer.length <= 2 * 1024 * 1024) {
+          resumeData = fileBuffer.toString('base64');
+        }
       } catch (readErr) {
         console.warn('Could not read resume file to base64:', readErr.message);
       }
@@ -94,24 +89,45 @@ exports.registerCandidate = async (req, res) => {
     const existing = await db.get('SELECT * FROM candidates WHERE email = ?', [trimmedEmail]);
 
     if (existing) {
-      if (existing.status === 'COMPLETED' || existing.status === 'AUTO_SUBMITTED') {
-        return res.status(400).json({
-          success: false,
-          code: 'ALREADY_COMPLETED',
-          message: 'This email has already completed the assessment.'
-        });
+      // Seamlessly update details and reset status so candidate can take assessment
+      await db.run(`
+        UPDATE candidates SET
+          fullName = ?, phone = ?, collegeName = ?, degree = ?, branch = ?,
+          graduationYear = ?, jobProfile = ?, status = 'REGISTERED',
+          score = 0, percentage = 0, cheatingWarnings = 0, violationReason = NULL,
+          testStartedAt = NULL, testSubmittedAt = NULL,
+          resumePath = COALESCE(?, resumePath),
+          resumeData = COALESCE(?, resumeData)
+        WHERE id = ?
+      `, [
+        fullName.trim(),
+        phone.trim(),
+        collegeName.trim(),
+        degree.trim(),
+        branch.trim(),
+        gradYearNum,
+        validProfile,
+        req.file ? resumePath : null,
+        resumeData,
+        existing.id
+      ]);
+
+      try {
+        await db.run('DELETE FROM answers WHERE candidateId = ?', [existing.id]);
+        await db.run('DELETE FROM test_sessions WHERE candidateId = ?', [existing.id]);
+      } catch (clearErr) {
+        console.warn('Error clearing candidate test session:', clearErr.message);
       }
 
-      // If IN_PROGRESS or REGISTERED, allow them to proceed/resume
       return res.status(200).json({
         success: true,
-        message: 'Existing registration found. You may continue your assessment.',
+        message: 'Registration updated successfully! Starting assessment...',
         candidate: {
           id: existing.id,
-          fullName: existing.fullName,
-          email: existing.email,
-          jobProfile: existing.jobProfile || existing.jobprofile || 'Web Development',
-          status: existing.status
+          fullName: fullName.trim(),
+          email: trimmedEmail,
+          jobProfile: validProfile,
+          status: 'REGISTERED'
         }
       });
     }

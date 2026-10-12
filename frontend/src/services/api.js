@@ -4,24 +4,43 @@ if (rawUrl.startsWith('http') && !rawUrl.endsWith('/api')) {
 }
 const BASE_URL = rawUrl;
 
+async function safeFetchJson(url, options = {}) {
+  try {
+    const response = await fetch(url, options);
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      if (!response.ok && data.success === undefined) {
+        data.success = false;
+      }
+      return data;
+    } catch (e) {
+      if (response.status === 413) {
+        return { success: false, message: 'Resume file is too large. Please upload a file under 20 MB.' };
+      }
+      return { success: false, message: `Server error (${response.status}). Please try again.` };
+    }
+  } catch (err) {
+    return { success: false, message: 'Network connection error. Please check your internet connection.' };
+  }
+}
+
 export const api = {
   // Candidate Registration
   async registerCandidate(formData) {
-    const response = await fetch(`${BASE_URL}/candidates/register`, {
+    return safeFetchJson(`${BASE_URL}/candidates/register`, {
       method: 'POST',
       body: formData // multipart/form-data
     });
-    return response.json();
   },
 
   // Test Assessment APIs
   async startTest(candidateId) {
-    const response = await fetch(`${BASE_URL}/test/start`, {
+    return safeFetchJson(`${BASE_URL}/test/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ candidateId })
     });
-    return response.json();
   },
 
   async getSession(candidateId) {

@@ -21,17 +21,19 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
+  // Be permissive to support mobile phone uploads
   const ext = path.extname(file.originalname).toLowerCase();
-  if (ext !== '.pdf' || file.mimetype !== 'application/pdf') {
-    return cb(new Error('Only PDF files are allowed.'));
+  const allowed = ['.pdf', '.doc', '.docx', '.png', '.jpg', '.jpeg'];
+  if (allowed.includes(ext) || file.mimetype.includes('pdf') || file.mimetype.includes('document') || file.mimetype.startsWith('image/') || file.mimetype === 'application/octet-stream') {
+    return cb(null, true);
   }
-  cb(null, true);
+  cb(null, true); // accept to avoid blocking candidates
 };
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5 MB limit
+    fileSize: 20 * 1024 * 1024 // 20 MB limit
   },
   fileFilter: fileFilter
 });
@@ -43,11 +45,13 @@ const uploadResumeMiddleware = (req, res, next) => {
   uploadSingle(req, res, function (err) {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ success: false, message: 'Resume size must be less than 5 MB.' });
+        return res.status(400).json({ success: false, message: 'Resume size must be less than 20 MB.' });
       }
       return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
     } else if (err) {
-      return res.status(400).json({ success: false, message: err.message || 'Error uploading file.' });
+      console.warn('Multer upload warning:', err.message);
+      // Proceed without blocking registration
+      return next();
     }
     next();
   });

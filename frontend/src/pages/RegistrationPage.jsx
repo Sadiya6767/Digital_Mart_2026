@@ -60,14 +60,8 @@ export default function RegistrationPage() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      setErrors(prev => ({ ...prev, resume: 'Only PDF files are allowed.' }));
-      setResumeFile(null);
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, resume: 'Resume size must be less than 5 MB.' }));
+    if (file.size > 20 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, resume: 'Resume size must be less than 20 MB.' }));
       setResumeFile(null);
       return;
     }
@@ -90,25 +84,18 @@ export default function RegistrationPage() {
       newErrors.email = 'Please enter a valid email address.';
     }
 
-    // Phone validation (10-digit Indian phone)
-    const cleanPhone = formData.phone.replace(/[\s\-+]/g, '');
-    const tenDigit = cleanPhone.length === 12 && cleanPhone.startsWith('91') 
-      ? cleanPhone.slice(2) 
-      : (cleanPhone.length === 11 && cleanPhone.startsWith('0') ? cleanPhone.slice(1) : cleanPhone);
+    // Phone validation (allows any valid 10-digit mobile number)
+    const digitsOnly = formData.phone.replace(/\D/g, '');
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone Number is required.';
-    } else if (!/^[6-9]\d{9}$/.test(tenDigit)) {
-      newErrors.phone = 'Please enter a valid 10-digit Indian mobile number.';
+    } else if (digitsOnly.length < 10) {
+      newErrors.phone = 'Please enter a valid 10-digit mobile number.';
     }
 
     if (!formData.collegeName.trim()) newErrors.collegeName = 'College Name is required.';
     if (!formData.degree.trim()) newErrors.degree = 'Degree is required.';
     if (!formData.branch.trim()) newErrors.branch = 'Branch is required.';
     if (!formData.graduationYear) newErrors.graduationYear = 'Graduation Year is required.';
-
-    if (!resumeFile) {
-      newErrors.resume = 'Please upload your resume.';
-    }
 
     if (!formData.confirmed) {
       newErrors.confirmed = 'You must confirm that the information provided is correct.';
@@ -142,7 +129,9 @@ export default function RegistrationPage() {
       data.append('branch', formData.branch.trim());
       data.append('graduationYear', formData.graduationYear);
       data.append('confirmed', formData.confirmed);
-      data.append('resume', resumeFile);
+      if (resumeFile) {
+        data.append('resume', resumeFile);
+      }
 
       const res = await api.registerCandidate(data);
 
@@ -161,15 +150,21 @@ export default function RegistrationPage() {
       // Start the test session
       const testRes = await api.startTest(res.candidate.id);
       if (testRes.success) {
-        sessionStorage.setItem('dm_test_session', JSON.stringify(testRes.session));
-        navigate('/test');
+        if (testRes.session) {
+          sessionStorage.setItem('dm_test_session', JSON.stringify(testRes.session));
+          navigate('/test');
+        } else if (testRes.status === 'COMPLETED' || testRes.status === 'AUTO_SUBMITTED') {
+          navigate('/result');
+        } else {
+          navigate('/test');
+        }
       } else {
         setServerError(testRes.message || 'Could not initiate assessment test.');
       }
 
     } catch (err) {
       console.error('Registration submit error:', err);
-      setServerError('Something went wrong. Please try again.');
+      setServerError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -533,19 +528,23 @@ export default function RegistrationPage() {
                   value={formData.graduationYear}
                   onChange={handleInputChange}
                 >
+                  <option value="2028">2028</option>
                   <option value="2027">2027</option>
                   <option value="2026">2026 (Final Year)</option>
                   <option value="2025">2025</option>
                   <option value="2024">2024</option>
                   <option value="2023">2023</option>
                   <option value="2022">2022</option>
+                  <option value="2021">2021</option>
+                  <option value="2020">2020</option>
+                  <option value="2019">2019 or earlier</option>
                 </select>
               </div>
 
               {/* Resume Upload */}
               <div className="form-group form-full">
                 <label className="form-label">
-                  Resume Upload (PDF only, max 5 MB) <span className="req">*</span>
+                  Resume Upload (PDF, Word, Image - max 20 MB) <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 'normal' }}>(Optional)</span>
                 </label>
 
                 <div 
@@ -557,12 +556,12 @@ export default function RegistrationPage() {
                     Click to browse and upload your Resume
                   </p>
                   <p style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    Accepts PDF files only up to 5 MB
+                    Accepts PDF, Word, or Image files up to 20 MB
                   </p>
                   <input
                     id="resumeFileInput"
                     type="file"
-                    accept=".pdf,application/pdf"
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,application/pdf"
                     style={{ display: 'none' }}
                     onChange={handleFileChange}
                   />
